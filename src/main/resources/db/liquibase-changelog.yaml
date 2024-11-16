@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 01_create_table_solardb
+      author: piotr
+      changes:
+        - sqlFile:
+            path: scripts/01_create_table_solardb.sql
+            relativeToChangelogFile: true
+            splitStatements: true
+            stripComments: true
+  - changeSet:
+      id: 02_add_external_id
+      author: piotr
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        not:
+          columnExists:
+            tableName: Solar_Bodies
+            columnName: external_id
+      changes:
+        - addColumn:
+            tableName: Solar_Bodies
+            columns:
+              - column:
+                  name: external_id
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: true
+  - changeSet:
+      id: 03_update_existing_external_id
+      author: piotr
+      changes:
+        - sqlFile:
+            path: scripts/03_update_existing_external_id.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: 04_remove_duplicates
+      author: piotr
+      changes:
+        - sqlFile:
+            path: scripts/04_remove_duplicates.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: 05_update_moon_count
+      author: piotr
+      changes:
+        - sqlFile:
+            path: scripts/05_update_moon_count.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: 06_add_original_name_to_moons
+      author: piotr
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        not:
+          columnExists:
+            tableName: Moons
+            columnName: original_name
+      changes:
+        - addColumn:
+            tableName: Moons
+            columns:
+              - column:
+                  name: original_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
