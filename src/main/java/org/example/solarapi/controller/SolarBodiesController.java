@@ -1,21 +1,18 @@
 package org.example.solarapi.controller;
 
+import org.example.solarapi.dto.SolarBodyDTO;
+import org.example.solarapi.mapper.SolarBodyMapper;
 import org.example.solarapi.model.Moon;
 import org.example.solarapi.model.SolarBodies;
 import org.example.solarapi.service.HttpClientService;
 import org.example.solarapi.service.SolarBodiesService;
-import org.example.solarapi.service.SolarSystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -53,12 +50,44 @@ public class SolarBodiesController {
         }
     }
     @GetMapping("/{englishName}")
-    public SolarBodies getSolarBodyByName(@PathVariable String englishName) {
-        return solarBodiesService.getSolarBodyByName(englishName);
+    public ResponseEntity<SolarBodyDTO> getSolarBodyByName(@PathVariable String englishName) {
+        SolarBodies solarBody = solarBodiesService.getSolarBodyByName(englishName);
+        if (solarBody == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        SolarBodyDTO dto = SolarBodyMapper.convertToDTO(solarBody);
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/{englishName}/moons")
     public Set<Moon> getMoonsBySolarBodyName(@PathVariable String englishName) {
         return solarBodiesService.getMoonsBySolarBodyName(englishName);
     }
+    @PostMapping
+    public ResponseEntity<SolarBodyDTO> createSolarBody(@RequestBody SolarBodyDTO solarBodyDTO) {
+        SolarBodies solarBody = SolarBodyMapper.convertToEntity(solarBodyDTO);
+        SolarBodies savedSolarBody = solarBodiesService.saveSolarBody(solarBody);
+        SolarBodyDTO savedDTO = SolarBodyMapper.convertToDTO(savedSolarBody);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedDTO);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<SolarBodyDTO> updateSolarBody(@PathVariable Long id, @RequestBody SolarBodyDTO solarBodyDTO) {
+        SolarBodies updatedSolarBody = solarBodiesService.updateSolarBody(id, solarBodyDTO);
+        if (updatedSolarBody == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        SolarBodyDTO updatedDTO = SolarBodyMapper.convertToDTO(updatedSolarBody);
+        return ResponseEntity.ok(updatedDTO);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSolarBody(@PathVariable Long id) {
+        boolean deleted = solarBodiesService.deleteSolarBody(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+
 }

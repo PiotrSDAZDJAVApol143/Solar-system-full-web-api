@@ -10,7 +10,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-class Vol {
+public class Vol {
     //Wartość objętości.
     //Wyjaśnienie: Liczba reprezentująca wartość objętości.
     @Column(name = "vol_value")

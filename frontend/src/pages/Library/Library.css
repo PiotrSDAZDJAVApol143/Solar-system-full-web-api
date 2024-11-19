@@ -1,0 +1,40 @@
+/* src/components/Library.css */
+.library {
+    text-align: center;
+    color: #FFF;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+.library h1 {
+    font-size: 3rem;
+    margin-bottom: 50px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+.planet-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    padding: 20px;
+    transition: transform 0.3s, background-color 0.3s;
+}
+
+.planet-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.05);
+}

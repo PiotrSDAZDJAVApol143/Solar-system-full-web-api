@@ -1,5 +1,7 @@
 package org.example.solarapi.service;
 
+import org.example.solarapi.dto.SolarBodyDTO;
+import org.example.solarapi.mapper.SolarBodyMapper;
 import org.example.solarapi.model.Moon;
 import org.example.solarapi.model.SolarBodies;
 import org.example.solarapi.repository.SolarBodiesRepository;
@@ -9,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class SolarBodiesService {
@@ -119,6 +122,54 @@ public class SolarBodiesService {
         } else {
             logger.warning("No solar body found for: " + englishName);
             return Collections.emptySet();
+        }
+    }
+    @Transactional
+    public SolarBodies saveSolarBody(SolarBodies solarBody) {
+        return solarBodiesRepository.save(solarBody);
+    }
+    @Transactional
+    public SolarBodies updateSolarBody(Long id, SolarBodyDTO solarBodyDTO) {
+        Optional<SolarBodies> optionalSolarBody = solarBodiesRepository.findById(id);
+        if (optionalSolarBody.isPresent()) {
+            SolarBodies existingSolarBody = optionalSolarBody.get();
+            // Aktualizacja pól
+            existingSolarBody.setEnglishName(solarBodyDTO.getEnglishName());
+            existingSolarBody.setBodyType(solarBodyDTO.getBodyType());
+            existingSolarBody.setPlanet(solarBodyDTO.isPlanet());
+            existingSolarBody.setMeanRadius(solarBodyDTO.getMeanRadius());
+            existingSolarBody.setSemimajorAxis(solarBodyDTO.getSemiMajorAxis() != null ? solarBodyDTO.getSemiMajorAxis().longValue() : null);
+            existingSolarBody.setPerihelion(solarBodyDTO.getPerihelion() != null ? solarBodyDTO.getPerihelion().longValue() : null);
+            existingSolarBody.setAphelion(solarBodyDTO.getAphelion() != null ? solarBodyDTO.getAphelion().longValue() : null);
+            existingSolarBody.setInclination(solarBodyDTO.getInclination());
+            existingSolarBody.setGravity(solarBodyDTO.getGravity());
+            existingSolarBody.setEscape(solarBodyDTO.getEscapeSpeed());
+            existingSolarBody.setSideralOrbit(solarBodyDTO.getOrbitalPeriod());
+            existingSolarBody.setSideralRotation(solarBodyDTO.getRotationPeriod());
+            existingSolarBody.setDiscoveredBy(solarBodyDTO.getDiscoveredBy());
+            existingSolarBody.setDiscoveryDate(solarBodyDTO.getDiscoveryDate());
+            existingSolarBody.setAxialTilt(solarBodyDTO.getAxialTilt());
+            existingSolarBody.setAvgTemp(solarBodyDTO.getAvgTemp());
+
+            if (solarBodyDTO.getMoons() != null) {
+                Set<Moon> moons = solarBodyDTO.getMoons().stream()
+                        .map(SolarBodyMapper::convertMoonDTOToEntity)
+                        .collect(Collectors.toSet());
+                existingSolarBody.setMoons(moons);
+            }
+
+            return solarBodiesRepository.save(existingSolarBody);
+        } else {
+            return null;
+        }
+    }
+    @Transactional
+    public boolean deleteSolarBody(Long id) {
+        if (solarBodiesRepository.existsById(id)) {
+            solarBodiesRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
         }
     }
 }

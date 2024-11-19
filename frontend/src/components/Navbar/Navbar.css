@@ -1,0 +1,56 @@
+/* src/components/Navbar.css */
+
+.navbar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0;
+    font-family: montserrat;
+    text-transform: uppercase;
+    background-color: silver;
+    box-shadow: 0 2px 5px rgba(49, 47, 47, 0.3);
+}
+
+.navbar-links {
+    display: flex;
+    gap: 20px;
+}
+
+.navbar-links a {
+    color: black;
+    font-size: larger;
+    font-weight: bolder;
+    text-decoration: none;
+    padding: 10px 10px;
+    border-radius: 5px;
+}
+
+.navbar-links a.active,
+.navbar-links a:hover {
+    background: rgba(87, 90, 95, 0.834);
+    color: rgb(48, 28, 130);
+    transition: color 0.3s ease;
+    border: none;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand .logo {
+    height: 70px;
+    filter: drop-shadow(5px 5px 5px #555);
+}
+
+.navbar-title {
+    font-family: "Rampart One", sans-serif;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: black;
+    margin-left: 5px;
+    font-style: normal;
+}
