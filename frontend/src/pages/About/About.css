@@ -5,6 +5,10 @@
     min-height: 100vh;
     overflow: hidden;
 }
+.content-column {
+    position: relative;
+    height: 80vh;
+}
 
 .content-wrapper {
     position: relative;
@@ -18,7 +22,6 @@
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    max-width: 800px;
 }
 
 .overlay-text h1 {
@@ -35,5 +38,5 @@
     font-weight: 100;
     font-size: 1rem;
     color: rgba(214, 199, 199, 0.66);
-    text-align: justify;
+    text-align: center;
 }

@@ -1,9 +1,9 @@
-// src/components/common/Starfield/Starfield.js
+// src/components/common/Stardust/Stardust.js
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
-import './Starfield.css';
+import './Stardust.css';
 
-const Starfield = () => {
+const Stardust = () => {
     const mountRef = useRef(null);
     const requestRef = useRef();
     const starfieldPausedRef = useRef(false);
@@ -116,9 +116,9 @@ const Starfield = () => {
     return (
         <div
             ref={mountRef}
-            className="starfield-container"
+            className="stardust-container"
         ></div>
     );
 };
 
-export default Starfield;
+export default Stardust;

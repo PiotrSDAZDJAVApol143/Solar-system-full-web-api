@@ -6,6 +6,9 @@ function About() {
     return (
         <div className="page">
             <div className="content-wrapper">
+                <div className="container-fluid">
+                    <div className="row">
+                        <div className="col-md-12 content-column">
                 <div className="overlay-text">
                     <h1>O MNIE</h1>
                     <p>
@@ -14,6 +17,9 @@ function About() {
                     <p>
                         Od kilku miesięcy zgłębiam JavaScript, Three.js oraz podstawy modelowania w Blenderze, co pozwala mi rozwijać się w kierunku tworzenia interaktywnych wizualizacji i animacji 3D. Zawodowo jestem magistrem Ekonomii i pracuję jako spedytor od 13 lat, ale programowanie stało się moją prawdziwą pasją, którą realizuję z entuzjazmem i zaangażowaniem.
                     </p>
+                </div>
+            </div>
+                    </div>
                 </div>
             </div>
         </div>
