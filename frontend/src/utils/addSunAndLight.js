@@ -23,6 +23,7 @@ export function addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambien
 
     // Słońce
     const sunTexture = loader.load("/assets/textures/star/sun_surface.jpg");
+
     const sunGeo = new THREE.SphereGeometry(sunRadius, 32, 32);
     const sunMat = new THREE.MeshBasicMaterial({ map: sunTexture });
     const sunMesh = new THREE.Mesh(sunGeo, sunMat);

@@ -27,7 +27,10 @@ const spaceHorizonDistance = 500000;
 const ambientLightPower = 5;
 const rotationAngle = -180;
 const mercuryTexturePath = "assets/textures/mercury/mercury_surface.jpg";
-const mercuryBumpMapPath = "assets/textures/mercury/mercury_bump3.jpg";
+const normalMapPath = "assets/textures/mercury/mercury_surface2_NRM.jpg";
+//const bumpOrDisplacementMapPath = "assets/textures/mercury/mercury_surface2_DISP.jpg";
+const aoMapPath = "assets/textures/mercury/mercury_surface2_OCC.jpg";
+const specularMapPath = "assets/textures/mercury/mercury_surface2_SPEC.jpg";
 const tweenGroup = new TWEEN.Group();
 
 let raycaster = new THREE.Raycaster();
@@ -55,7 +58,7 @@ export function initializeMercuryScene(containerElement) {
     mercuryPlanet.rotation.z = axialTilt * Math.PI / 180;
     scene.add(mercuryPlanet);
 
-    mercuryMesh = createPlanet(planetRadius, mercuryTexturePath, 5, mercuryBumpMapPath, 1 ); //
+    mercuryMesh = createPlanet(planetRadius, mercuryTexturePath, 5,normalMapPath,  aoMapPath, specularMapPath);
     mercuryMesh.receiveShadow = true;
     mercuryPlanet.add(mercuryMesh);
 
