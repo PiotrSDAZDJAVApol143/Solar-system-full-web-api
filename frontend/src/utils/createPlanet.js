@@ -10,11 +10,18 @@ export function createPlanet(planetRadius, texturePath, shininess, normalMapPath
     mapTexture.colorSpace = THREE.SRGBColorSpace;
 
     const materialParams = {
-        map: mapTexture,
        // shininess: shininess || 5,
         roughness: 0.9,
         metalness: 0.8,
     };
+    if (texturePath) {
+        const mapTexture = loader.load(texturePath);
+        mapTexture.colorSpace = THREE.SRGBColorSpace;
+        materialParams.map = mapTexture;
+    } else {
+        console.error('Brak ścieżki do tekstury powierzchni.');
+        return null; // Lub utwórz materiał domyślny
+    }
 
     if (normalMapPath) {
         materialParams.normalMap = loader.load(normalMapPath);

@@ -18,7 +18,7 @@ import { setMeshProperties, calculateMaxPoints } from '../../utils/planetUtils';
 
 let scene, camera, renderer, controls, container, animateId;
 let planetGroup, planetMesh;
-let sunMesh, sunLight, sunPivot, ambientLight;
+let sunMesh, sunLight, sunOrbitPivot, ambientLight;
 let labelRenderer;
 let onWindowResize;
 let occlusionObjects = [];
@@ -27,6 +27,11 @@ let orbitTails = [];
 let gui;
 let planetData;
 let guiParams;
+let previousTime = 0;
+
+const SCALE_FACTOR = 1 / 1000; // 1 jednostka = 1000 km
+const TIME_SCALE = 30 / 86400; // 30 sekund = 1 doba ziemska
+
 
 const tweenGroup = new Group();
 
@@ -51,6 +56,11 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     console.log('initPlanetData:', initPlanetData);
     container = containerElement;
     planetData = initPlanetData;
+
+    if (!initPlanetData) {
+        console.error('initPlanetData jest null. Nie można zainicjalizować sceny.');
+        return;
+    }
 
     raycaster = new THREE.Raycaster();
 
@@ -83,6 +93,8 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         planetGroup.rotation.z = planetData.axialTilt * Math.PI / 180;
     }
     scene.add(planetGroup);
+
+
 
     planetMesh = createPlanet(
         planetData.radius,
@@ -119,13 +131,23 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         });
     }
 
-    // Dodaj Słońce i światło
-    const sunResult = addSunAndLight(scene, planetData.sunDistance || 100000, planetData.sunRadius || 1000, planetData.flarePower || 900, planetData.ambientLightPower || 5);
+    sunOrbitPivot = new THREE.Object3D();
+    planetGroup.add(sunOrbitPivot);
+
+    const sunResult = addSunAndLight(
+        scene,
+        planetData.sunRadius || (695700 * SCALE_FACTOR),
+        planetData.flarePower || 900,
+        planetData.ambientLightPower || 5
+    );
     sunMesh = sunResult.sunMesh;
     sunLight = sunResult.sunLight;
-    sunPivot = sunResult.sunPivot;
     ambientLight = sunResult.ambientLight;
+    sunOrbitPivot.add(sunMesh);
     occlusionObjects.push(sunMesh);
+
+    const sunOrbitRadius = planetData.sunDistance;
+    sunMesh.position.set(sunOrbitRadius, 0, 0);
 
     // Dodaj sferę kosmiczną
     createSpaceHorizon(scene, planetData.spaceHorizonDistance || 500000);
@@ -190,7 +212,7 @@ export function disposePlanetScene() {
     planetMesh = null;
     sunMesh = null;
     sunLight = null;
-    sunPivot = null;
+    sunOrbitPivot = null;
     ambientLight = null;
     raycaster = null;
     occlusionObjects = [];
@@ -203,16 +225,23 @@ export function disposePlanetScene() {
 }
 
 function animate(time) {
+    if (!previousTime) previousTime = time;
     animateId = requestAnimationFrame(animate);
-
     if (!planetData || !controls || !renderer) return;
 
     controls.update();
     tweenGroup.update(time);
 
     // Obrót planety
-    if (planetMesh && planetData.rotationSpeed) {
-        planetMesh.rotation.y += (2 * Math.PI) / (planetData.rotationSpeed * 60);
+    if (planetMesh && planetData.rotationPeriod) {
+        const planetRotationSpeed = (2 * Math.PI) / (planetData.rotationPeriod * TIME_SCALE);
+        planetMesh.rotation.y += planetRotationSpeed * (time - previousTime) / 1000;
+    }
+
+    // Obrót Słońca wokół planety
+    if (sunOrbitPivot && planetData.sunOrbitPeriod) {
+        const sunOrbitSpeed = (2 * Math.PI) / (planetData.sunOrbitPeriod * TIME_SCALE);
+        sunOrbitPivot.rotation.y += sunOrbitSpeed * (time - previousTime) / 1000;
     }
 
     // Aktualizacja księżyców
@@ -232,6 +261,7 @@ function animate(time) {
     }
 
     renderer.render(scene, camera);
+    previousTime = time;
 }
 
 function onWindowResizeHandler() {
