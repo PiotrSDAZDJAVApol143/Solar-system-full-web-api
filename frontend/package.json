@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@craco/craco": "^7.1.0",
+    "@craco/craco": "^5.9.0",
     "@mediapipe/tasks-vision": "^0.10.18",
     "@react-three/drei": "^9.117.2",
     "@react-three/fiber": "^8.17.10",
@@ -13,10 +13,11 @@
     "@tweenjs/tween.js": "^25.0.0",
     "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
+    "lil-gui": "^0.20.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "react-transition-group": "^4.4.5",
     "three": "^0.170.0",
     "web-vitals": "^2.1.4"
@@ -44,5 +45,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "webpack": "^5.96.1"
   }
 }

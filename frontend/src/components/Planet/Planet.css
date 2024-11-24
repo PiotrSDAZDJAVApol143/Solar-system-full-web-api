@@ -1,14 +1,13 @@
-/* src/pages/Mercury/Mercury.css */
-
+/* /Planet.css */
 .page {
     position: relative;
     min-height: 90vh;
-    /*overflow: hidden; */
+    overflow: hidden;
 }
 
 .planet-container {
     position: relative;
-    height: 70vh;
+    height: 80vh;
     z-index: 4;
 }
 
@@ -19,9 +18,6 @@
     border-radius: 15px;
     border: 2px solid #ddd;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-left: 20px;
+    margin-top:2vh;
     margin-bottom: 10px;
-}
-.planet-info .p {
-    font-size: 0.5rem;
 }

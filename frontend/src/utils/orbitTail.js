@@ -1,5 +1,4 @@
 // src/utils/orbitTail.js
-
 import * as THREE from 'three';
 
 export class OrbitTail {

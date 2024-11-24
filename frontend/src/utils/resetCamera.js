@@ -1,7 +1,9 @@
 //src/utils/resetCamera.js
-import * as TWEEN from '@tweenjs/tween.js';
+import { Tween, Easing } from '@tweenjs/tween.js';
 
-export function resetCamera(camera, controls, state, initialCameraPosition, initialControlsTarget, initialMinDistance, initialMaxDistance) {
+export function resetCamera(camera, controls, state, initialCameraPosition, initialControlsTarget, initialMinDistance, initialMaxDistance, tweenGroup) {
+    console.log('resetCamera wywołana');
+
     state.isTweening = true;
     state.isFollowingObject = false;
     state.currentTargetObject = null;
@@ -30,9 +32,9 @@ export function resetCamera(camera, controls, state, initialCameraPosition, init
     controls.enableZoom = true;
     controls.enablePan = true;
 
-    const tween = new TWEEN.Tween(from)
+    const tween = new Tween(from, tweenGroup)
         .to(to, 2000)
-        .easing(TWEEN.Easing.Quadratic.InOut)
+        .easing(Easing.Quadratic.InOut)
         .onUpdate(() => {
             camera.position.set(from.x, from.y, from.z);
             controls.target.set(from.tx, from.ty, from.tz);

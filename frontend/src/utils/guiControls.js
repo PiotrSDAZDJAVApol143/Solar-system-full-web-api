@@ -1,7 +1,7 @@
 //src/utils/guiControls.js
-import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.17.0/dist/lil-gui.esm.min.js';
+import GUI from 'lil-gui';
 
-export function initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCamera, container) {
+export function initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCameraFunction, container) {
     const gui = new GUI();
 
     const namesFolder = gui.addFolder('Księżyce');
@@ -54,7 +54,7 @@ export function initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCam
         });
 
 
-    gui.add({ stopFollowing: resetCamera }, 'stopFollowing').name('Zatrzymaj śledzenie');
+    gui.add({ resetCamera: resetCameraFunction }, 'resetCamera').name('Zatrzymaj śledzenie');
 
     // Ustawienie pozycji GUI w górnym lewym rogu
     if (container) {

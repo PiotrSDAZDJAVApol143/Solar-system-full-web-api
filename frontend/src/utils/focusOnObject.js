@@ -1,8 +1,8 @@
 // focusOnObject.js
 import * as THREE from 'three';
-import * as TWEEN from '@tweenjs/tween.js';
+import { Tween, Easing } from '@tweenjs/tween.js';
 
-export function focusOnObject(object, camera, controls, state) {
+export function focusOnObject(object, camera, controls, state, tweenGroup) {
     if (!controls || !camera || !object) {
         console.error("Brak niezbędnych argumentów w focusOnObject.");
         return;
@@ -59,9 +59,9 @@ export function focusOnObject(object, camera, controls, state) {
     controls.target.copy(targetPosition);
     state.previousTargetPosition.copy(targetPosition);
 
-    const tween = new TWEEN.Tween(from)
+    const tween = new Tween(from, tweenGroup)
         .to(to, 2000)
-        .easing(TWEEN.Easing.Quadratic.InOut)
+        .easing(Easing.Quadratic.InOut)
         .onUpdate(() => {
             camera.position.set(from.x, from.y, from.z);
             controls.update();

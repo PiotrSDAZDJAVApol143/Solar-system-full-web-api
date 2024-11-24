@@ -1,48 +1,40 @@
-//src/utils/createPlanet.js
+// src/utils/createPlanet.js
 import * as THREE from 'three';
 
 export const loader = new THREE.TextureLoader();
 
-export function createPlanet(planetRadius, texturePath, shininess, normalMapPath, displacementMapPath, aoMapPath, specularMapPath) {
-    const geometry = new THREE.SphereGeometry(planetRadius, 256, 256);
+export function createPlanet(planetRadius, texturePath, shininess, normalMapPath, bumpMapPath, aoMapPath, specularMapPath) {
+    const geometry = new THREE.SphereGeometry(planetRadius, 256, 256); // Używamy 256 segmentów
 
     const mapTexture = loader.load(texturePath);
     mapTexture.colorSpace = THREE.SRGBColorSpace;
 
-    const material = new THREE.MeshStandardMaterial({
+    const materialParams = {
         map: mapTexture,
-        normalMap: normalMapPath ? loader.load(normalMapPath) : null,
-        bumpMap: displacementMapPath ? loader.load(displacementMapPath) : null,
-        bumpScale: displacementMapPath ? 0.5 : undefined, // Dostosuj wartość
-        roughness: 0.7, // Zapewnia bardziej matową powierzchnię
-        metalnessMap: specularMapPath ? loader.load(specularMapPath) : null,
-        metalness: 0.1 // Minimalny metaliczny efekt
-    });
-   //if (normalMapPath) {
-   //    const normalTexture = loader.load(normalMapPath);
-   //    normalTexture.colorSpace = THREE.SRGBColorSpace;
-   //    material.normalMap = normalTexture;
-   //}
-   //if(bumpOrDisplacementMapPath){
-   //    const bumpTexture = loader.load(bumpOrDisplacementMapPath);
-   //    bumpTexture.colorSpace = THREE.SRGBColorSpace;
-   //    material.bumpMap = bumpTexture;
-   //    material.bumpScale = bumpScale;
-   //}
+       // shininess: shininess || 5,
+        roughness: 0.9,
+        metalness: 0.8,
+    };
 
-   if (aoMapPath) {
-      // const aoTexture = loader.load(aoMapPath);
-      // aoTexture.colorSpace = THREE.SRGBColorSpace;
-      // material.aoMap = aoTexture;
-       geometry.setAttribute('uv2', geometry.attributes.uv);
-   }
+    if (normalMapPath) {
+        materialParams.normalMap = loader.load(normalMapPath);
+    }
 
-   if (specularMapPath) {
-       //const specularTexture = loader.load(specularMapPath);
-       //specularTexture.colorSpace = THREE.SRGBColorSpace;
-       //material.specularMap = specularTexture;
-   }
+    if (bumpMapPath) {
+        materialParams.bumpMap = loader.load(bumpMapPath);
+        materialParams.bumpScale = 0.05; // Dostosuj wartość według potrzeb
+    }
 
+    if (aoMapPath) {
+        materialParams.aoMap = loader.load(aoMapPath);
+        geometry.setAttribute('uv2', geometry.attributes.uv);
+    }
+
+    if (specularMapPath) {
+        materialParams.metalnessMap = loader.load(specularMapPath);
+    }
+
+    const material = new THREE.MeshStandardMaterial(materialParams);
 
     const planetMesh = new THREE.Mesh(geometry, material);
     planetMesh.castShadow = true;
