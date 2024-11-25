@@ -27,8 +27,9 @@ let orbitTails = [];
 let gui;
 let planetData;
 let guiParams;
-
 const tweenGroup = new Group();
+const SCALE_FACTOR = 1 / 1000; // 1 jednostka = 1000 km
+const TIME_SCALE = 30 / 86400; // 30 sekund = 1 doba ziemska
 
 let state = {
     isTweening: false,
@@ -216,6 +217,7 @@ function animate(time) {
         const sunOrbitSpeed = (2 * Math.PI) / (planetData.sunOrbitDuration || 2638); // Długość orbity w godzinach
         sunPivot.rotation.y += sunOrbitSpeed * 0.01; // Dostosuj szybkość obrotu
     }
+
 
     // Aktualizacja księżyców
     moons.forEach((moon, index) => {

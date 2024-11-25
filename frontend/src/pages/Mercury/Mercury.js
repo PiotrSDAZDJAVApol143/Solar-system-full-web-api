@@ -62,7 +62,7 @@ function Mercury() {
                     sunRadius: 1093, // Dostosuj według potrzeb
                     flarePower: 900, // Dostosuj według potrzeb
                     ambientLightPower: 5, // Dostosuj według potrzeb
-                    spaceHorizonDistance: 600000, // Dostosuj według potrzeb
+                    spaceHorizonDistance: 1500000, // Dostosuj według potrzeb
                     description: data.description || 'Pierwsza planeta od Słońca',
                     moons: data.moons || [], // Dostosuj według potrzeb
                     rings: null, // Jeśli dostępne

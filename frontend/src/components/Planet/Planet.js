@@ -7,11 +7,10 @@ function Planet({ planetData }) {
     const containerRef = useRef(null);
 
     useLayoutEffect(() => {
-        if (containerRef.current) {
-            const container = containerRef.current;
-            initializePlanetScene(container, planetData);
+        if (containerRef.current && planetData) {
+            initializePlanetScene(containerRef.current, planetData);
         } else {
-            console.warn('containerRef.current is null');
+            console.warn('containerRef.current jest null lub planetData jest null');
         }
 
         return () => {
