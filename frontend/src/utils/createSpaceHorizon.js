@@ -5,6 +5,7 @@ export function createSpaceHorizon(scene, spaceHorizonDistance){
     const loader = new THREE.TextureLoader();
     const spaceTexture = loader.load('/assets/textures/8k_stars_milky_way.jpg');
 
+    spaceTexture.repeat.set(1, 1);
     spaceTexture.mapping = THREE.EquirectangularReflectionMapping;
 
     const spaceGeometry = new THREE.SphereGeometry(spaceHorizonDistance, 128, 128);

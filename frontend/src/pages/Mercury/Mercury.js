@@ -8,7 +8,7 @@ const mercuryData = {
     name: 'Merkury',
     radius: 3.83,
     axialTilt: -0.034,
-    rotationAngle: -180,
+    rotationAngle: 60,
     texturePath: "assets/textures/mercury/mercury_surface.jpg",
     normalMapPath: "assets/textures/mercury/mercury_surface2_NRM.jpg",
     bumpMapPath: null, // Jeśli nie masz bump mapy, ustaw na null
@@ -20,7 +20,7 @@ const mercuryData = {
     sunRadius: 1093,
     flarePower: 900,
     ambientLightPower: 5,
-    spaceHorizonDistance: 500000,
+    spaceHorizonDistance: 600000,
     description: 'Merkury jest pierwszą planetą od Słońca...',
     moons: [], // Merkury nie ma księżyców
     rings: null, // Merkury nie ma pierścieni
@@ -42,26 +42,27 @@ function Mercury() {
                     perihelion: data.perihelion || null,
                     aphelion: data.aphelion || null,
                     inclination: data.inclination || 0,
-                    mass: (data.mass * 100).toFixed(4),
-                    vol: (data.vol * 100).toFixed(4),
+                    sunOrbitDuration: 2638,
+                    mass: (data.mass * 100).toFixed(2),
+                    vol: (data.vol * 100).toFixed(2),
                     escapeSpeed: data.escapeSpeed || null,
                     discoveredBy: data.discoveredBy || null,
                     discoveryDate: data.discoveryDate || null,
                     avgTemp: data.avgTemp ? (data.avgTemp - 273.15).toFixed(2) : null,
                     moonCount: data.moonCount || 0,
-                    rotationAngle: 0, // Domyślna wartość lub z danych
-                    texturePath: data.textures.surfaceTexture || null,
-                    normalMapPath: data.textures.normalMapTexture || null,
-                    bumpMapPath: data.textures.bumpMapTexture || null,
-                    aoMapPath: data.textures.ambientOcclusionMapTexture || null,
-                    specularMapPath: data.textures.specularMapTexture || null,
+                    rotationAngle: 60,
+                    texturePath: "assets/textures/mercury/mercury_surface.jpg",
+                    normalMapPath: "assets/textures/mercury/mercury_surface2_NRM.jpg",
+                    bumpMapPath: null,
+                    aoMapPath: null,
+                    specularMapPath: null,
                     cameraPosition: 10, // Dostosuj według potrzeb
                     rotationSpeed: data.rotationPeriod || 24, // Dostosuj według potrzeb
                     sunDistance: data.semiMajorAxis / 149597870.7 || 1, // Jednostki astronomiczne
                     sunRadius: 1093, // Dostosuj według potrzeb
                     flarePower: 900, // Dostosuj według potrzeb
                     ambientLightPower: 5, // Dostosuj według potrzeb
-                    spaceHorizonDistance: 500000, // Dostosuj według potrzeb
+                    spaceHorizonDistance: 600000, // Dostosuj według potrzeb
                     description: data.description || 'Pierwsza planeta od Słońca',
                     moons: data.moons || [], // Dostosuj według potrzeb
                     rings: null, // Jeśli dostępne
@@ -84,21 +85,21 @@ function Mercury() {
                     <div className="col-md-8 planet-container" style={{height: '85vh'}}>
                         <Planet planetData={mercuryData}/>
                     </div>
-                    <div className="col-md-3 planet-info" id="planet-info">
+                    <div className="col-md-3 planet-info" id="planet-info" style={{height: '85vh', width: '30%'}}>
                         <h2> {planetData ? planetData.name : 'planecie'}:</h2>
                         {planetData ? (
                             <div>
-                                <p>{planetData.description}</p>
-                                <p>Średni promień: {planetData.meanRadiusKm} km</p>
+                                <p><u>{planetData.description}</u></p>
+                                <p>Średnica planety: {planetData.meanRadiusKm*2} km</p>
                                 <p>Średnia odległość od
                                     Słońca: {planetData.semiMajorAxis ? planetData.semiMajorAxis.toLocaleString('pl-PL') : 'Brak danych'} km</p>
                                 <p>Masa: {planetData.mass}% masy Ziemi</p>
                                 <p>Objętość: {planetData.vol}% objętości Ziemi</p>
-                                <p>Okres orbitalny: {planetData.orbitalPeriod} dni ziemskich</p>
+                                <p>Rok trwa: {planetData.orbitalPeriod} dni ziemskich</p>
                                 <p>Grawitacja: {planetData.gravity} m/s²</p>
                                 <p>Średnia Temperatura: {planetData.avgTemp}°C
                                     / {planetData.avgTemp ? (parseFloat(planetData.avgTemp) + 273.15).toFixed(2) : null}°K</p>
-                                <p>Okres rotacji: {planetData.rotationPeriod} godzin ziemskich</p>
+                                <p>Doba trwa: {planetData.rotationPeriod} godzin ziemskich / ({planetData.rotationPeriod / 24} dni)</p>
                                 <p>Liczba księżyców: {planetData.moonCount}</p>
                                 {/* Dodaj inne dane według potrzeb */}
                             </div>

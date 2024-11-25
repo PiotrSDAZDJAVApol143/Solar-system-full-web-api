@@ -47,8 +47,6 @@ const smallMoonThreshold = 1;  // Możesz dostosować wartości według potrzeb
 const mediumMoonThreshold = 3;
 
 export function initializePlanetScene(containerElement, initPlanetData) {
-    console.log('containerElement:', containerElement);
-    console.log('initPlanetData:', initPlanetData);
     container = containerElement;
     planetData = initPlanetData;
 
@@ -72,8 +70,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     initialControlsTarget.copy(controls.target);
     initialMinDistance = controls.minDistance;
     initialMaxDistance = controls.maxDistance;
-    console.log('Initial Camera Position:', initialCameraPosition);
-    console.log('Initial Controls Target:', initialControlsTarget);
+
 
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -213,6 +210,11 @@ function animate(time) {
     // Obrót planety
     if (planetMesh && planetData.rotationSpeed) {
         planetMesh.rotation.y += (2 * Math.PI) / (planetData.rotationSpeed * 60);
+    }
+    // Obrót SunPivot
+    if (sunPivot) {
+        const sunOrbitSpeed = (2 * Math.PI) / (planetData.sunOrbitDuration || 2638); // Długość orbity w godzinach
+        sunPivot.rotation.y += sunOrbitSpeed * 0.01; // Dostosuj szybkość obrotu
     }
 
     // Aktualizacja księżyców

@@ -11,7 +11,7 @@
 
     font-family: montserrat;
     text-transform: uppercase;
-    background-color: silver;
+    background-color: rgba(192, 192, 192, 0.2);
     box-shadow: 0 2px 5px rgba(49, 47, 47, 0.3);
 }
 
@@ -21,8 +21,8 @@
 }
 
 .navbar-links a {
-    color: black;
-    font-size: 1rem;
+    color: ghostwhite;
+    font-size: 1.2rem;
     font-weight: bolder;
     text-decoration: none;
     padding: 10px 10px;

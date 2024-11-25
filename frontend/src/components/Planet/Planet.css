@@ -9,6 +9,10 @@
     position: relative;
     height: 80vh;
     z-index: 4;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
 }
 
 .planet-info {

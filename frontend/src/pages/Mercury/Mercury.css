@@ -8,8 +8,14 @@
 
 .planet-container {
     position: relative;
-    height: 70vh;
+    height: 80vh;
     z-index: 4;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+    border: 2px solid #ddd;
+
 }
 
 .planet-info {
