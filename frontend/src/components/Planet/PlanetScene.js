@@ -1,7 +1,7 @@
 // src/components/Planet/PlanetScene.js
 import * as THREE from 'three';
 import { createSceneCameraAndRenderer } from '../../utils/createSceneCameraAndRenderer';
-import { createPlanet } from '../../utils/createPlanet';
+import {createPlanet, loader} from '../../utils/createPlanet';
 import { addSunAndLight } from '../../utils/addSunAndLight';
 import { createSpaceHorizon } from '../../utils/createSpaceHorizon';
 import getStarfield from '../../utils/getStarfield';
@@ -80,19 +80,40 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         planetGroup.rotation.z = planetData.axialTilt * Math.PI / 180;
     }
     scene.add(planetGroup);
+    const texturePath = planetData.texturePath ? `/${planetData.texturePath}` : null;
+    const cloudTexture = planetData.cloudTexture ? `/${planetData.cloudTexture}` : null;
+    const normalMapPath = planetData.normalMapPath ? `/${planetData.normalMapPath}` : null;
+    const bumpMapPath = planetData.bumpMapPath ? `/${planetData.bumpMapPath}` : null;
+    const aoMapPath = planetData.aoMapPath ? `/${planetData.aoMapPath}` : null;
+    const specularMapPath = planetData.specularMapPath ? `/${planetData.specularMapPath}` : null;
+
 
     planetMesh = createPlanet(
         planetData.radius,
-        planetData.texturePath,
+        texturePath,
         planetData.shininess || 5,
-        planetData.normalMapPath,
-        planetData.bumpMapPath,
-        planetData.aoMapPath,
-        planetData.specularMapPath
+        normalMapPath,
+        bumpMapPath,
+        aoMapPath,
+        specularMapPath
     );
     planetMesh.receiveShadow = true;
     setMeshProperties(planetMesh, planetData.name, planetData.radius);
     planetGroup.add(planetMesh);
+
+    if (planetData.cloudTexture) {
+        const cloudsTexturePath = `/${planetData.cloudTexture}`;
+        const cloudsMaterial = new THREE.MeshStandardMaterial({
+            map: loader.load(cloudsTexturePath),
+            transparent: true,
+            opacity: planetData.cloudOpacity || 0.8,
+            blending: THREE.NormalBlending,
+        });
+        const cloudsMesh = new THREE.Mesh(planetMesh.geometry.clone(), cloudsMaterial);
+        cloudsMesh.scale.setScalar(planetData.cloudScale);
+        planetGroup.add(cloudsMesh);
+        planetMesh.cloudsMesh = cloudsMesh;
+    }
 
     // Dodaj pierścienie, jeśli są zdefiniowane
     if (planetData.rings) {
@@ -207,9 +228,16 @@ function animate(time) {
     controls.update();
     tweenGroup.update(time);
 
-    // Obrót planety
+    // Obrót planety uwzgledniajac kierunek
     if (planetMesh && planetData.rotationSpeed) {
-        planetMesh.rotation.y += (2 * Math.PI) / (planetData.rotationSpeed * 60);
+        const rotationDirection = planetData.rotationSpeed < 0 ? -1 : 1;
+        const rotationSpeed = Math.abs(planetData.rotationSpeed);
+        planetMesh.rotation.y += rotationDirection * ((2 * Math.PI) / (rotationSpeed * 60));
+    }
+    if (planetMesh.cloudsMesh) {
+        const cloudRotationSpeed = planetData.cloudRotationSpeed || (Math.abs(planetData.rotationSpeed) * 0.9);
+        const rotationDirection = planetData.rotationSpeed < 0 ? -1 : 1;
+        planetMesh.cloudsMesh.rotation.y += rotationDirection * ((2 * Math.PI) / (cloudRotationSpeed * 60));
     }
     // Obrót SunPivot
     if (sunPivot) {

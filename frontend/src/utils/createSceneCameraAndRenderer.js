@@ -9,7 +9,7 @@ export function createSceneCameraAndRenderer(container, w, h, cameraPosition, pl
     const cameraX = Math.cos(angle) * cameraPosition;
     const cameraZ = Math.sin(angle) * cameraPosition;
 
-    const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 500000);
+    const camera = new THREE.PerspectiveCamera(75, w / h, 0.01, 600000);
     camera.position.set(cameraX, 0, cameraZ);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });

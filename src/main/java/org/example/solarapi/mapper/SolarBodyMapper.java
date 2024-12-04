@@ -8,8 +8,11 @@ import org.example.solarapi.model.Moon;
 import org.example.solarapi.model.SolarBodies;
 import org.example.solarapi.model.Vol;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,51 +89,32 @@ public class SolarBodyMapper {
 
     private static TexturesDTO generateTextures(String englishName, String bodyType) {
         TexturesDTO textures = new TexturesDTO();
-        String folderName = getFolderNameFromBodyType(bodyType);
-        String basePath = TEXTURES_BASE_PATH + folderName + "/";
         String baseName = englishName.replaceAll("\\s+", "_").toLowerCase();
+        String basePath = "assets/textures/" + baseName + "/";
 
         // Generowanie ścieżek do poszczególnych tekstur
-        String surfaceTexturePath = basePath + baseName + "_surface.jpg";
-        String additionalTexturePath = basePath + baseName + "_additional.jpg";
-        String cloudTexturePath = basePath + baseName + "_cloud.jpg";
-        String additionalCloudTexturePath = basePath + baseName + "_cloud_additional.jpg";
-        String bumpMapTexturePath = basePath + baseName + "_bump.jpg";
-        String normalMapTexturePath = basePath + baseName + "_normal.jpg";
-        String ambientOcclusionMapTexturePath = basePath + baseName + "_ao.jpg";
-        String specularMapTexturePath = basePath + baseName + "_specular.jpg";
+        Map<String, Consumer<String>> textureSetters = new HashMap<>();
+        textureSetters.put("_surface.jpg", textures::setSurfaceTexture);
+        textureSetters.put("_additional.jpg", textures::setAdditionalTexture);
+        textureSetters.put("_cloud.jpg", textures::setCloudTexture);
+        textureSetters.put("_cloud_additional.jpg", textures::setAdditionalCloudTexture);
+        textureSetters.put("_bump.jpg", textures::setBumpMapTexture);
+        textureSetters.put("_normal.jpg", textures::setNormalMapTexture);
+        textureSetters.put("_ao.jpg", textures::setAmbientOcclusionMapTexture);
+        textureSetters.put("_specular.jpg", textures::setSpecularMapTexture);
 
-        if (fileExists(surfaceTexturePath)) {
-            textures.setSurfaceTexture(surfaceTexturePath);
-        }
-        if (fileExists(additionalTexturePath)) {
-            textures.setAdditionalTexture(additionalTexturePath);
-        }
-        if (fileExists(cloudTexturePath)) {
-            textures.setCloudTexture(cloudTexturePath);
-        }
-        if (fileExists(additionalCloudTexturePath)) {
-            textures.setAdditionalCloudTexture(additionalCloudTexturePath);
-        }
-        if (fileExists(bumpMapTexturePath)) {
-            textures.setBumpMapTexture(bumpMapTexturePath);
-        }
-        if (fileExists(normalMapTexturePath)) {
-            textures.setNormalMapTexture(normalMapTexturePath);
-        }
-        if (fileExists(ambientOcclusionMapTexturePath)) {
-            textures.setAmbientOcclusionMapTexture(ambientOcclusionMapTexturePath);
-        }
-        if (fileExists(specularMapTexturePath)) {
-            textures.setSpecularMapTexture(specularMapTexturePath);
+        for (Map.Entry<String, Consumer<String>> entry : textureSetters.entrySet()) {
+            String texturePath = basePath + baseName + entry.getKey();
+            if (fileExists(texturePath)) {
+                entry.getValue().accept(texturePath);
+            }
         }
 
         return textures;
     }
     private static String generateModelPath(String englishName, String bodyType) {
         String folderName = getFolderNameFromBodyType(bodyType);
-        String basePath = MODELS_BASE_PATH + folderName + "/";
-
+        String basePath = "assets/models/" + folderName + "/";
         String baseName = englishName.replaceAll("\\s+", "_").toLowerCase();
         String modelPath = basePath + baseName + ".glb";
 
@@ -140,12 +124,11 @@ public class SolarBodyMapper {
             return null;
         }
     }
-
     private static boolean fileExists(String relativePath) {
-        String fullPath = "src/main/resources/static" + relativePath;
+        Path projectDir = Paths.get(System.getProperty("user.dir"));
+        Path fullPath = projectDir.resolve("frontend").resolve("public").resolve(relativePath);
 
-        Path path = Paths.get(fullPath);
-        return Files.exists(path);
+        return Files.exists(fullPath);
     }
 
     public static MoonDTO convertMoonToDTO(Moon moon) {

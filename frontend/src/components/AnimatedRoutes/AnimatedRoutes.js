@@ -7,7 +7,8 @@ import Library from '../../pages/Library/Library';
 import FunFacts from '../../pages/FunFacts/FunFacts';
 import SolarSystem from '../../pages/SolarSystem/SolarSystem';
 import Contact from '../../pages/Contact/Contact';
-import Mercury from '../../pages/Mercury/Mercury';
+import Mercury from '../../pages/Library/Planets/Mercury/Mercury';
+import Venus from '../../pages/Library/Planets/Venus/Venus';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import './AnimatedRoutes.css';
 
@@ -36,6 +37,7 @@ function AnimatedRoutes() {
                         <Route path="/about" element={<About/>}/>
                         <Route path="/library" element={<Library/>}/>
                         <Route path="/mercury" element={<Mercury/>}/>
+                        <Route path="/venus" element={<Venus/>}/>
                         <Route path="/fun-facts" element={<FunFacts/>}/>
                         <Route path="/solar-system" element={<SolarSystem/>}/>
                         <Route path="/contact" element={<Contact/>}/>
