@@ -2,7 +2,7 @@
 .page {
     position: relative;
     min-height: 90vh;
-    overflow: hidden;
+    /*overflow: hidden; */
 }
 
 .planet-container {
@@ -12,16 +12,20 @@
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
+    border-radius: 15px;
+    border: 2px solid #ddd;
 
 }
 
 .planet-info {
     background-color: #191b1e9f;
+    font-size: 1rem;
     padding: 20px;
     color: #dcdcdc;
     border-radius: 15px;
     border: 2px solid #ddd;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-top:2vh;
+    margin-left: 20px;
     margin-bottom: 10px;
 }

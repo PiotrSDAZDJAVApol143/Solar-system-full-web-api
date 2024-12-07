@@ -92,21 +92,27 @@ public class SolarBodyMapper {
         String baseName = englishName.replaceAll("\\s+", "_").toLowerCase();
         String basePath = "assets/textures/" + baseName + "/";
 
-        // Generowanie ścieżek do poszczególnych tekstur
+        // Generowanie ścieżek do poszczególnych tekstur bez rozszerzenia
         Map<String, Consumer<String>> textureSetters = new HashMap<>();
-        textureSetters.put("_surface.jpg", textures::setSurfaceTexture);
-        textureSetters.put("_additional.jpg", textures::setAdditionalTexture);
-        textureSetters.put("_cloud.jpg", textures::setCloudTexture);
-        textureSetters.put("_cloud_additional.jpg", textures::setAdditionalCloudTexture);
-        textureSetters.put("_bump.jpg", textures::setBumpMapTexture);
-        textureSetters.put("_normal.jpg", textures::setNormalMapTexture);
-        textureSetters.put("_ao.jpg", textures::setAmbientOcclusionMapTexture);
-        textureSetters.put("_specular.jpg", textures::setSpecularMapTexture);
+        textureSetters.put("_surface", textures::setSurfaceTexture);
+        textureSetters.put("_additional", textures::setAdditionalTexture);
+        textureSetters.put("_cloud", textures::setCloudTexture);
+        textureSetters.put("_cloud_additional", textures::setAdditionalCloudTexture);
+        textureSetters.put("_bump", textures::setBumpMapTexture);
+        textureSetters.put("_normal", textures::setNormalMapTexture);
+        textureSetters.put("_ao", textures::setAmbientOcclusionMapTexture);
+        textureSetters.put("_specular", textures::setSpecularMapTexture);
 
+        // Dla każdego klucza sprawdzamy czy istnieje plik z rozszerzeniem .jpg lub .png
         for (Map.Entry<String, Consumer<String>> entry : textureSetters.entrySet()) {
-            String texturePath = basePath + baseName + entry.getKey();
-            if (fileExists(texturePath)) {
-                entry.getValue().accept(texturePath);
+            String baseTextureName = baseName + entry.getKey(); // np. earth_surface
+            String jpgPath = basePath + baseTextureName + ".jpg";
+            String pngPath = basePath + baseTextureName + ".png";
+
+            if (fileExists(jpgPath)) {
+                entry.getValue().accept(jpgPath);
+            } else if (fileExists(pngPath)) {
+                entry.getValue().accept(pngPath);
             }
         }
 

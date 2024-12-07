@@ -164,6 +164,74 @@ public class SolarBodiesService {
         }
     }
     @Transactional
+    public SolarBodyDTO patchSolarBody(Long id, Map<String, Object> updates) {
+        Optional<SolarBodies> optional = solarBodiesRepository.findById(id);
+        if (optional.isEmpty()) {
+            logger.warning("No solar body found for ID: " + id);
+            return null;
+        }
+
+        SolarBodies existingSolarBody = optional.get();
+        updates.forEach((field, value) -> {
+            switch (field) {
+                case "englishName":
+                    existingSolarBody.setEnglishName((String) value);
+                    break;
+                case "bodyType":
+                    existingSolarBody.setBodyType((String) value);
+                    break;
+                case "planet":
+                    existingSolarBody.setPlanet((Boolean) value);
+                    break;
+                case "meanRadius":
+                    existingSolarBody.setMeanRadius(value != null ? ((Number) value).doubleValue() : null);
+                    break;
+                case "semiMajorAxis":
+                    existingSolarBody.setSemimajorAxis(value != null ? ((Number) value).longValue() : null);
+                    break;
+                case "perihelion":
+                    existingSolarBody.setPerihelion(value != null ? ((Number) value).longValue() : null);
+                    break;
+                case "aphelion":
+                    existingSolarBody.setAphelion(value != null ? ((Number) value).longValue() : null);
+                    break;
+                case "inclination":
+                    existingSolarBody.setInclination(value != null ? ((Number) value).doubleValue() : null);
+                    break;
+                case "gravity":
+                    existingSolarBody.setGravity(value != null ? ((Number) value).doubleValue() : null);
+                    break;
+                case "escapeSpeed":
+                    existingSolarBody.setEscape(value != null ? ((Number) value).doubleValue() : null);
+                    break;
+                case "orbitalPeriod":
+                    existingSolarBody.setSideralOrbit(value != null ? ((Number) value).doubleValue() : null);
+                    break;
+                case "rotationPeriod":
+                    existingSolarBody.setSideralRotation(value != null ? ((Number) value).doubleValue() : null);
+                    break;
+                case "discoveredBy":
+                    existingSolarBody.setDiscoveredBy((String) value);
+                    break;
+                case "discoveryDate":
+                    existingSolarBody.setDiscoveryDate((String) value);
+                    break;
+                case "axialTilt":
+                    existingSolarBody.setAxialTilt(value != null ? ((Number) value).doubleValue() : null);
+                    break;
+                case "avgTemp":
+                    existingSolarBody.setAvgTemp(value != null ? ((Number) value).doubleValue() : null);
+                    break;
+                // Moons i inne pola można obsłużyć podobnie, jeśli to konieczne
+                default:
+                    logger.warning("Unsupported field for patch: " + field);
+            }
+        });
+
+        SolarBodies saved = solarBodiesRepository.save(existingSolarBody);
+        return SolarBodyMapper.convertToDTO(saved);
+    }
+    @Transactional
     public boolean deleteSolarBody(Long id) {
         if (solarBodiesRepository.existsById(id)) {
             solarBodiesRepository.deleteById(id);

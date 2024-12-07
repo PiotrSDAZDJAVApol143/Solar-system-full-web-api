@@ -1,0 +1,33 @@
+/* src/pages/Library/Sun/Sun.css */
+
+.page {
+    position: relative;
+    min-height: 90vh;
+    /*overflow: hidden; */
+}
+
+.planet-container {
+    position: relative;
+    height: 80vh;
+    z-index: 4;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+    border: 2px solid #ddd;
+
+}
+
+.planet-info {
+    background-color: #191b1e9f;
+    padding: 20px;
+    color: #dcdcdc;
+    border-radius: 15px;
+    border: 2px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-left: 20px;
+    margin-bottom: 10px;
+}
+.planet-info .p {
+    font-size: 0.5rem;
+}

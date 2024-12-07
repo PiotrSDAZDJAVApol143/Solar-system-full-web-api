@@ -1,7 +1,7 @@
 // src/pages/Mercury/Mercury.js
 import React, { useEffect, useState } from 'react';
 import Planet from '../../../../components/Planet/Planet';
-import './Mercury.css';
+import '../../../../components/Planet/Planet.css';
 import axios from 'axios';
 import {getScaleFactor} from "../../../../config";
 

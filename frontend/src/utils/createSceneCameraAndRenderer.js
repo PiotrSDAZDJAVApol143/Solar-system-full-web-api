@@ -25,7 +25,7 @@ export function createSceneCameraAndRenderer(container, w, h, cameraPosition, pl
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.minDistance = planetRadius + planetRadius * 0.2;
-    controls.maxDistance = 350;
+    controls.maxDistance = planetRadius*10;
 
     return { scene, camera, renderer, controls };
 }

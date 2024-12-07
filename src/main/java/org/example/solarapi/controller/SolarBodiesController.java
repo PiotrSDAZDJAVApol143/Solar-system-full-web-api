@@ -11,9 +11,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -78,6 +80,15 @@ public class SolarBodiesController {
         }
         SolarBodyDTO updatedDTO = SolarBodyMapper.convertToDTO(updatedSolarBody);
         return ResponseEntity.ok(updatedDTO);
+    }
+    @PatchMapping("/{id}")
+    public ResponseEntity<SolarBodyDTO> patchSolarBody(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        SolarBodyDTO updated = solarBodiesService.patchSolarBody(id, updates);
+        if (updated != null) {
+            return ResponseEntity.ok(updated);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSolarBody(@PathVariable Long id) {

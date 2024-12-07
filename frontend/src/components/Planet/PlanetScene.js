@@ -107,7 +107,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
             map: loader.load(cloudsTexturePath),
             transparent: true,
             opacity: planetData.cloudOpacity || 0.8,
-            blending: THREE.NormalBlending,
+            blending: THREE.AdditiveBlending,
         });
         const cloudsMesh = new THREE.Mesh(planetMesh.geometry.clone(), cloudsMaterial);
         cloudsMesh.scale.setScalar(planetData.cloudScale);
@@ -146,7 +146,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     occlusionObjects.push(sunMesh);
 
     // Dodaj sferę kosmiczną
-    createSpaceHorizon(scene, planetData.spaceHorizonDistance || 500000);
+    createSpaceHorizon(scene, planetData.spaceHorizonDistance || 600000);
 
     // Dodaj gwiazdy
     const stars = getStarfield({ numStars: 800 });

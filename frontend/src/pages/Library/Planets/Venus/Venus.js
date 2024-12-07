@@ -1,7 +1,7 @@
 // src/pages/Library/Planets/Mercury/Venus.js
 import React, { useEffect, useState } from 'react';
 import Planet from '../../../../components/Planet/Planet';
-import './Venus.css';
+import '../../../../components/Planet/Planet.css';
 import axios from 'axios';
 import {getScaleFactor} from "../../../../config";
 function Venus(){
@@ -24,7 +24,7 @@ function Venus(){
                     perihelion: data.perihelion || null,
                     aphelion: data.aphelion || null,
                     inclination: data.inclination || 0,
-                    sunOrbitDuration: 2638,
+                    sunOrbitDuration: 10957.5,
                     mass: (data.mass * 100).toFixed(2),
                     vol: (data.vol * 100).toFixed(2),
                     escapeSpeed: data.escapeSpeed || null,
