@@ -35,8 +35,8 @@ function Earth(){
                     texturePath: textures.surfaceTexture || null,
                     additionalTexture: textures.additionalTexture || null,
                     cloudTexture: textures.cloudTexture || null,
-                    cloudRotationSpeed: 50,
-                    cloudOpacity: 0.5,
+                    cloudRotationSpeed: 20,
+                    cloudOpacity: 0.6,
                     cloudScale: 1.015,
                     additionalCloudTexture: textures.additionalCloudTexture || null,
                     normalMapPath: textures.normalMapTexture || null,
@@ -48,7 +48,7 @@ function Earth(){
                     sunDistance: data.semiMajorAxis *scaleFactor || 1, // Jednostki astronomiczne
                     sunRadius: 695700 * scaleFactor, // wielkosc slonca
                     flarePower: 600, // sila rozblysku
-                    ambientLightPower: 2.8, // sila swiatła otoczenia
+                    ambientLightPower: 2.7, // sila swiatła otoczenia
                     spaceHorizonDistance: 600000, // max wielkość bańki kosmosu
                     description: data.description || 'Nasz dom',
                     moons: data.moons || [],

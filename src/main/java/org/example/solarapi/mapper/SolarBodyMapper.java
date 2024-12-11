@@ -140,6 +140,7 @@ public class SolarBodyMapper {
     public static MoonDTO convertMoonToDTO(Moon moon) {
         MoonDTO moonDTO = new MoonDTO();
         moonDTO.setEnglishName(moon.getMoon()); // Mapowanie pola 'moon' na 'englishName'
+        moonDTO.setRel(moon.getRel()); // Mapowanie rel
         return moonDTO;
     }
     public static SolarBodies convertToEntity(SolarBodyDTO dto) {
@@ -215,6 +216,49 @@ public class SolarBodyMapper {
         moon.setMoon(dto.getEnglishName());
         return moon;
     }
+    public static MoonDTO convertSolarBodyToMoonDTO(SolarBodies moonBody) {
+        MoonDTO moonDTO = new MoonDTO();
+        moonDTO.setEnglishName(moonBody.getEnglishName());
+        moonDTO.setBodyType(moonBody.getBodyType());
+        moonDTO.setMeanRadius(moonBody.getMeanRadius());
+        moonDTO.setSemimajorAxis(moonBody.getSemimajorAxis());
+        moonDTO.setPerihelion(moonBody.getPerihelion());
+        moonDTO.setAphelion(moonBody.getAphelion());
+        moonDTO.setEccentricity(moonBody.getEccentricity());
+        moonDTO.setGravity(moonBody.getGravity());
+        moonDTO.setEscapeSpeed(moonBody.getEscape());
+        moonDTO.setInclination(moonBody.getInclination());
+        moonDTO.setAxialTilt(moonBody.getAxialTilt());
+        moonDTO.setAvgTemp(moonBody.getAvgTemp());
+        moonDTO.setOrbitalPeriod(moonBody.getSideralOrbit());
+        moonDTO.setRotationPeriod(moonBody.getSideralRotation());
+        moonDTO.setDiscoveredBy(moonBody.getDiscoveredBy());
+        moonDTO.setDiscoveryDate(moonBody.getDiscoveryDate());
+        // Przeliczenia masy
+        if (moonBody.getMass() != null && moonBody.getMass().getMassValue() != null && moonBody.getMass().getMassExponent() != null) {
+            double bodyMass = moonBody.getMass().getMassValue() * Math.pow(10, moonBody.getMass().getMassExponent());
+            double earthMass = EARTH_MASS_VALUE * Math.pow(10, EARTH_MASS_EXPONENT);
+            double massRatio = bodyMass / earthMass;
+            moonDTO.setMass(massRatio);
+        } else {
+            moonDTO.setMass(null);
+        }
+        // Przeliczenia objętości
+        if (moonBody.getVol() != null && moonBody.getVol().getVolValue() != null && moonBody.getVol().getVolExponent() != null) {
+            double bodyVol = moonBody.getVol().getVolValue() * Math.pow(10, moonBody.getVol().getVolExponent());
+            double earthVol = EARTH_VOL_VALUE * Math.pow(10, EARTH_VOL_EXPONENT);
+            double volRatio = bodyVol / earthVol;
+            moonDTO.setVol(volRatio);
+        } else {
+            moonDTO.setVol(null);
+        }
+
+        moonDTO.setTextures(generateTextures(moonBody.getEnglishName(), moonBody.getBodyType()));
+        moonDTO.setModel(generateModelPath(moonBody.getEnglishName(), moonBody.getBodyType()));
+
+        return moonDTO;
+    }
+
     private static String getFolderNameFromBodyType(String bodyType) {
         return switch (bodyType.toLowerCase()) {
             case "planet" -> "planet";

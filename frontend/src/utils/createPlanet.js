@@ -8,12 +8,13 @@ export function createPlanet(planetRadius, texturePath, shininess, normalMapPath
 
     const mapTexture = loader.load(texturePath);
     mapTexture.colorSpace = THREE.SRGBColorSpace;
+   // mapTexture.receiveShadow = true;
 
     const materialParams = {
         map: mapTexture,
        // shininess: shininess || 5,
         roughness: 0.9,
-        metalness: 0.8,
+        metalness: 0.0,
     };
 
     if (normalMapPath) {

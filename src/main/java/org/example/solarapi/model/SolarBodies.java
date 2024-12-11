@@ -41,6 +41,7 @@ public class SolarBodies {
 
     private Long perihelion;
     private Long aphelion;
+    private Double eccentricity;
     private Double inclination;
 
     @Embedded

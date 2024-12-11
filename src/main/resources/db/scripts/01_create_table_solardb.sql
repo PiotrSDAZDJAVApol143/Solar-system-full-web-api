@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS Solar_Bodies
     semimajor_axis   BIGINT,
     perihelion       BIGINT,
     aphelion         BIGINT,
+    eccentricity     DOUBLE,
     inclination      DOUBLE,
     mass_value       DOUBLE,
     mass_exponent    INTEGER,

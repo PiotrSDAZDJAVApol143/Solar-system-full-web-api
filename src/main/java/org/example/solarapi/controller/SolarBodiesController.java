@@ -57,8 +57,11 @@ public class SolarBodiesController {
         if (solarBody == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        SolarBodyDTO dto = SolarBodyMapper.convertToDTO(solarBody);
+        SolarBodyDTO dto = solarBodiesService.convertToDTOWithFullMoons(solarBody);
         return ResponseEntity.ok(dto);
+
+       // SolarBodyDTO dto = SolarBodyMapper.convertToDTO(solarBody);
+       // return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/{englishName}/moons")

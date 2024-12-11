@@ -6,7 +6,7 @@ export function addSunAndLight(scene, sunDistance, sunRadius, flarePower, ambien
     const loader = new THREE.TextureLoader();
 
     // Światło
-    const sunLight = new THREE.DirectionalLight(0xffffff, 3.5);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
     sunLight.position.set(sunDistance, 0, 0);
     sunLight.castShadow = true;
     // Ustawienia cienia dla sunLight

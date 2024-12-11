@@ -27,8 +27,11 @@ let orbitTails = [];
 let gui;
 let planetData;
 let guiParams;
+let additionalTextureMesh = null;
+
 
 const tweenGroup = new Group();
+const textureLoader = new THREE.TextureLoader();
 
 let state = {
     isTweening: false,
@@ -47,8 +50,16 @@ const smallMoonThreshold = 1;  // Możesz dostosować wartości według potrzeb
 const mediumMoonThreshold = 3;
 
 export function initializePlanetScene(containerElement, initPlanetData) {
+    if (!containerElement) {
+        console.error("Brak elementu kontenera!");
+        return;
+    }
     container = containerElement;
     planetData = initPlanetData;
+    if (!container) {
+        console.error("Kontener jest null");
+        return;
+    }
 
     raycaster = new THREE.Raycaster();
 
@@ -81,6 +92,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     }
     scene.add(planetGroup);
     const texturePath = planetData.texturePath ? `/${planetData.texturePath}` : null;
+    const additionalTexture = planetData.additionalTexture ? `/${planetData.additionalTexture}` : null;
     const cloudTexture = planetData.cloudTexture ? `/${planetData.cloudTexture}` : null;
     const normalMapPath = planetData.normalMapPath ? `/${planetData.normalMapPath}` : null;
     const bumpMapPath = planetData.bumpMapPath ? `/${planetData.bumpMapPath}` : null;
@@ -103,17 +115,98 @@ export function initializePlanetScene(containerElement, initPlanetData) {
 
     if (planetData.cloudTexture) {
         const cloudsTexturePath = `/${planetData.cloudTexture}`;
-        const cloudsMaterial = new THREE.MeshStandardMaterial({
-            map: loader.load(cloudsTexturePath),
-            transparent: true,
-            opacity: planetData.cloudOpacity || 0.8,
-            blending: THREE.AdditiveBlending,
-        });
+        const cloudsTexture = loader.load(cloudsTexturePath);
+
+        let cloudsMaterial;
+        if (planetData.name === 'Earth') {
+           cloudsMaterial = new THREE.MeshStandardMaterial({
+                map: cloudsTexture,
+               alphaMap: textureLoader.load('/assets/textures/earth/earth_cloud_Alpha.png'),
+                transparent: true,
+               depthWrite: false,
+                opacity: planetData.cloudOpacity,
+               roughness: 0.8,
+                blending: THREE.NormalBlending,
+            });
+
+        } else if (planetData.name === 'Venus') {
+            cloudsMaterial = new THREE.MeshPhongMaterial({
+                map: cloudsTexture,
+                transparent: true,
+                opacity: planetData.cloudOpacity || 0.95,
+                blending: THREE.NormalBlending,
+            });
+        }
         const cloudsMesh = new THREE.Mesh(planetMesh.geometry.clone(), cloudsMaterial);
         cloudsMesh.scale.setScalar(planetData.cloudScale);
+        cloudsMesh.castShadow = true;
+        cloudsMesh.receiveShadow = true;
         planetGroup.add(cloudsMesh);
         planetMesh.cloudsMesh = cloudsMesh;
     }
+
+    if (planetData.additionalTexture) {
+        const additionalTexturePath = `/${planetData.additionalTexture}`;
+        const additionalMap = loader.load(additionalTexturePath);
+        additionalMap.colorSpace = THREE.SRGBColorSpace;
+
+        const additionalTextureMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                map: { value: additionalMap },
+                lightDirection: { value: new THREE.Vector3(1,0,0) }, // Kierunek światła - aktualizuj w animate()
+                warmThreshold: { value: 0.001 }, // reguluj próg ciepła
+            },
+            vertexShader: `
+            varying vec2 vUv;
+            varying vec3 vPositionW; // pozycja w świecie
+
+            void main() {
+                vUv = uv;
+                vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                vPositionW = worldPos.xyz;
+                gl_Position = projectionMatrix * viewMatrix * worldPos;
+            }
+        `,
+            fragmentShader: `
+            uniform sampler2D map;
+            uniform vec3 lightDirection;
+            uniform float warmThreshold;
+
+            varying vec2 vUv;
+            varying vec3 vPositionW;
+
+            // Zakładamy, że planeta jest centrowana w (0,0,0).
+            // Wektor vPositionW jest więc także wektorem normalnej do powierzchni (dla sfery).
+            void main() {
+                vec3 normal = normalize(vPositionW);
+                vec4 texColor = texture2D(map, vUv);
+
+                // Filtrujemy ciepłe kolory - sprawdzamy czy R jest większe od G i B
+                float r = texColor.r;
+                float g = texColor.g;
+                float b = texColor.b;
+                if (r <= g + warmThreshold || r <= b + warmThreshold) {
+                    discard; 
+                }
+
+                // Dot product - jeśli > 0 to jasna strona, jeśli <= 0 to ciemna
+                float dotProduct = dot(normal, normalize(lightDirection));
+                
+                // Po jasnej stronie (dotProduct > 0) chcemy zgasić światła:
+                float visibility = dotProduct < 0.0 ? 1.0 : 0.0;
+
+                // Wyświetlamy światła z addytywnym blendingiem
+                gl_FragColor = vec4(texColor.rgb * visibility, texColor.a * visibility);
+            }
+        `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+        });
+
+        additionalTextureMesh = new THREE.Mesh(planetMesh.geometry, additionalTextureMaterial);
+        planetGroup.add(additionalTextureMesh);
+    }
+
 
     // Dodaj pierścienie, jeśli są zdefiniowane
     if (planetData.rings) {
@@ -219,7 +312,7 @@ export function disposePlanetScene() {
     planetData = null;
     guiParams = null;
 }
-
+const clock = new THREE.Clock();
 function animate(time) {
     animateId = requestAnimationFrame(animate);
 
@@ -228,12 +321,19 @@ function animate(time) {
     controls.update();
     tweenGroup.update(time);
 
-    // Obrót planety uwzgledniajac kierunek
     if (planetMesh && planetData.rotationSpeed) {
         const rotationDirection = planetData.rotationSpeed < 0 ? -1 : 1;
         const rotationSpeed = Math.abs(planetData.rotationSpeed);
-        planetMesh.rotation.y += rotationDirection * ((2 * Math.PI) / (rotationSpeed * 60));
+        const rotationDelta = rotationDirection * ((2 * Math.PI) / (rotationSpeed * 60));
+        planetMesh.rotation.y += rotationDelta;
+
+        // Obróć dodatkową teksturę nocną w taki sam sposób
+        if (additionalTextureMesh) {
+            additionalTextureMesh.rotation.y += rotationDelta;
+        }
     }
+
+    // Obrót chmur
     if (planetMesh.cloudsMesh) {
         const cloudRotationSpeed = planetData.cloudRotationSpeed || (Math.abs(planetData.rotationSpeed) * 0.9);
         const rotationDirection = planetData.rotationSpeed < 0 ? -1 : 1;

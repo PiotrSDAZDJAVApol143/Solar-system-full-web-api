@@ -1,5 +1,6 @@
 package org.example.solarapi.service;
 
+import org.example.solarapi.dto.MoonDTO;
 import org.example.solarapi.dto.SolarBodyDTO;
 import org.example.solarapi.mapper.SolarBodyMapper;
 import org.example.solarapi.model.Moon;
@@ -80,7 +81,6 @@ public class SolarBodiesService {
                     solarBody.setMoons(new HashSet<>());
                 }
 
-                // Set the parent reference in Moon entities
                 for (Moon moon : solarBody.getMoons()) {
                     moon.setSolarBodies(solarBody);
                 }
@@ -113,6 +113,35 @@ public class SolarBodiesService {
             logger.warning("No solar body found for: " + englishName);
         }
         return solarBody;
+    }
+
+    private SolarBodies fetchAndSaveFromExternalAPI(String englishName) {
+        try {
+            String encodedName = HttpClientService.encodeValue(englishName.toLowerCase());
+            String url = "https://api.le-systeme-solaire.net/rest/bodies/" + encodedName;
+            SolarBodies solarBodiesDetails = httpClientService.getPlanetDetails(url, SolarBodies.class);
+            if (solarBodiesDetails == null) {
+                return null;
+            }
+
+            if (solarBodiesDetails.getMoons() == null) {
+                solarBodiesDetails.setMoons(new HashSet<>());
+            }
+            solarBodiesDetails.setMoonCount(solarBodiesDetails.getMoons().size());
+            SolarBodies existingSolarBody = solarBodiesRepository.findByEnglishName(englishName);
+            if (existingSolarBody != null) {
+                existingSolarBody.setMoons(solarBodiesDetails.getMoons());
+                existingSolarBody.setMoonCount(solarBodiesDetails.getMoonCount());
+                solarBodiesRepository.save(existingSolarBody);
+                return existingSolarBody;
+            } else {
+                solarBodiesRepository.save(solarBodiesDetails);
+                return solarBodiesDetails;
+            }
+        } catch (Exception e) {
+            logger.severe("Error fetching data from external API for: " + englishName + ": " + e.getMessage());
+            return null;
+        }
     }
 
     public Set<Moon> getMoonsBySolarBodyName(String englishName) {
@@ -240,4 +269,108 @@ public class SolarBodiesService {
             return false;
         }
     }
+    @Transactional
+    public SolarBodies fetchAndSaveSolarBody(String englishName) {
+        SolarBodies existing = solarBodiesRepository.findByEnglishName(englishName);
+        if (existing != null) return existing;
+
+        String encodedName = HttpClientService.encodeValue(englishName.toLowerCase());
+        String url = "https://api.le-systeme-solaire.net/rest/bodies/" + encodedName;
+        SolarBodies solarBodyDetails = httpClientService.getPlanetDetails(url, SolarBodies.class);
+        if (solarBodyDetails != null) {
+            if (solarBodyDetails.getMoons() == null) {
+                solarBodyDetails.setMoons(new HashSet<>());
+            }
+            solarBodyDetails.setMoonCount(solarBodyDetails.getMoons().size());
+            return solarBodiesRepository.save(solarBodyDetails);
+        }
+        return null;
+    }
+    public SolarBodyDTO convertToDTOWithFullMoons(SolarBodies solarBody) {
+        SolarBodyDTO dto = SolarBodyMapper.convertToDTO(solarBody);
+
+        if (dto.getMoons() != null && !dto.getMoons().isEmpty()) {
+            Set<MoonDTO> expandedMoons = new HashSet<>();
+            for (MoonDTO basicMoon : dto.getMoons()) {
+                // Próbujemy najpierw po englishName:
+                SolarBodies moonBody = getSolarBodyByName(basicMoon.getEnglishName());
+                if (moonBody == null) {
+                    // Jeśli brak w bazie i API po nazwie się nie powiedzie to spróbujmy rel
+                    moonBody = findOrFetchBody(basicMoon.getEnglishName(), basicMoon.getRel());
+                }
+
+                if (moonBody != null) {
+                    // Konwertujemy SolarBodies na MoonDTO z pełnymi informacjami
+                    // Potrzebujemy nową metodę w SolarBodyMapper do tego:
+                    MoonDTO fullMoonDTO = SolarBodyMapper.convertSolarBodyToMoonDTO(moonBody);
+                    expandedMoons.add(fullMoonDTO);
+                } else {
+                    // Jeśli nie znaleziono nawet po rel, zostawiamy minimalne informacje
+                    expandedMoons.add(basicMoon);
+                }
+            }
+            dto.setMoons(expandedMoons);
+        }
+        return dto;
+    }
+    @Transactional
+    public SolarBodies findOrFetchBody(String englishName, String rel) {
+        // 1. Spróbuj znaleźć w bazie
+        SolarBodies body = getSolarBodyByName(englishName);
+        if (body != null) {
+            return body;
+        }
+
+        // 2. Nie ma w bazie - spróbuj pobrać z API po englishName
+        SolarBodies fetched = fetchFromApi(englishName);
+        if (fetched != null) {
+            return fetched;
+        }
+
+        // 3. Jeśli nie znaleziono po englishName a mamy rel, spróbuj po rel
+        if (rel != null && !rel.isEmpty()) {
+            logger.info("Trying to fetch body from rel: " + rel);
+            fetched = fetchFromApiByRel(rel);
+            if (fetched != null) {
+                return fetched;
+            }
+        }
+
+        // Jeśli wszystko zawiedzie, zwróć null
+        logger.warning("Could not fetch body for name: " + englishName + " and rel: " + rel);
+        return null;
+    }
+    private SolarBodies fetchFromApi(String englishName) {
+        logger.info("No local data found for: " + englishName + ", attempting to fetch from API.");
+        String encodedName = HttpClientService.encodeValue(englishName.toLowerCase());
+        String url = "https://api.le-systeme-solaire.net/rest/bodies/" + encodedName;
+        SolarBodies solarBodyDetails = httpClientService.getPlanetDetails(url, SolarBodies.class);
+        return saveIfNotNull(englishName, solarBodyDetails);
+    }
+
+    private SolarBodies fetchFromApiByRel(String rel) {
+        logger.info("Attempting to fetch body from rel: " + rel);
+        SolarBodies solarBodyDetails = httpClientService.getPlanetDetails(rel, SolarBodies.class);
+        // W przypadku rel możemy mieć inną nazwę englishName - odczytamy z solarBodyDetails
+        if (solarBodyDetails != null && solarBodyDetails.getEnglishName() != null) {
+            return saveIfNotNull(solarBodyDetails.getEnglishName(), solarBodyDetails);
+        }
+        return null;
+    }
+
+    private SolarBodies saveIfNotNull(String englishName, SolarBodies solarBodyDetails) {
+        if (solarBodyDetails == null) {
+            logger.warning("Could not find data for: " + englishName + " even from external API.");
+            return null;
+        }
+
+        if (solarBodyDetails.getMoons() == null) {
+            solarBodyDetails.setMoons(new HashSet<>());
+        }
+        solarBodyDetails.setMoonCount(solarBodyDetails.getMoons().size());
+        SolarBodies saved = solarBodiesRepository.save(solarBodyDetails);
+        logger.info("Saved " + englishName + " from API.");
+        return saved;
+    }
+
 }

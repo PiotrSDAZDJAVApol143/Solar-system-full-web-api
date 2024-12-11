@@ -1,18 +1,19 @@
 // src/components/Planet/Planet.js
-import React, { useLayoutEffect, useRef } from 'react';
+import  React, { useEffect, useRef } from 'react';
 import { initializePlanetScene, disposePlanetScene } from './PlanetScene';
 import './Planet.css';
 
 function Planet({ planetData }) {
     const containerRef = useRef(null);
 
-    useLayoutEffect(() => {
-        if (containerRef.current) {
-            const container = containerRef.current;
-            initializePlanetScene(container, planetData);
-        } else {
-            console.warn('containerRef.current is null');
+    useEffect(() => {
+        if (!planetData) return;
+        if (!containerRef.current) {
+            console.warn('Brak kontenera, jeszcze nie wyrenderowany');
+            return;
         }
+
+        initializePlanetScene(containerRef.current, planetData);
 
         return () => {
             disposePlanetScene();
