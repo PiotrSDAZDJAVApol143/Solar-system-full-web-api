@@ -1,5 +1,4 @@
 // src/utils/labelUtils.js
-//import { CSS2DRenderer, CSS2DObject } from 'https://cdn.jsdelivr.net/npm/three@0.169/examples/jsm/renderers/CSS2DRenderer.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import * as THREE from 'three';
 

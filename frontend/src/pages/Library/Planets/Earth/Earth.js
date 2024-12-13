@@ -13,9 +13,15 @@ function Earth(){
                 const data = response.data;
                 const textures = data.textures || {};
                 const scaleFactor = getScaleFactor(data.semiMajorAxis);
+                console.log("Obliczony scaleFactor:", scaleFactor, "dla semiMajorAxis:", data.semiMajorAxis);
+
+                if (!scaleFactor || isNaN(scaleFactor)) {
+                    console.error("Nieprawidłowy scaleFactor:", scaleFactor, "dla semiMajorAxis:", data.semiMajorAxis);
+                }
 
                 const mappedData = {
                     name: data.englishName || 'Brak nazwy',
+                    scaleFactor: scaleFactor,
                     bodyType: data.bodyType || null,
                     radius: data.meanRadius* scaleFactor,
                     axialTilt: data.axialTilt || 0,
@@ -48,7 +54,7 @@ function Earth(){
                     sunDistance: data.semiMajorAxis *scaleFactor || 1, // Jednostki astronomiczne
                     sunRadius: 695700 * scaleFactor, // wielkosc slonca
                     flarePower: 600, // sila rozblysku
-                    ambientLightPower: 2.7, // sila swiatła otoczenia
+                    ambientLightPower: 2, // sila swiatła otoczenia
                     spaceHorizonDistance: 600000, // max wielkość bańki kosmosu
                     description: data.description || 'Nasz dom',
                     moons: data.moons || [],

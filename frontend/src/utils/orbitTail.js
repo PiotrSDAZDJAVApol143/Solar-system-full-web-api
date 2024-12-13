@@ -31,6 +31,7 @@ export class OrbitTail {
             linewidth: 2,
         });
         this.line = new THREE.Line(geometry, material);
+        this.line.renderOrder =50;
         this.line.visible = false; // Początkowo ukryty
 
         // Dodanie linii do sceny

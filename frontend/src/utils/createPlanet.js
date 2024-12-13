@@ -5,7 +5,7 @@ export const loader = new THREE.TextureLoader();
 
 export function createPlanet(planetRadius, texturePath, shininess, normalMapPath, bumpMapPath, aoMapPath, specularMapPath) {
     const geometry = new THREE.SphereGeometry(planetRadius, 256, 256); // Używamy 256 segmentów
-
+    console.log("Tworzenie planety z radius:", planetRadius);
     const mapTexture = loader.load(texturePath);
     mapTexture.colorSpace = THREE.SRGBColorSpace;
    // mapTexture.receiveShadow = true;

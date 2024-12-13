@@ -49,7 +49,7 @@ function Venus(){
                     sunDistance: data.semiMajorAxis *scaleFactor || 1, // Jednostki astronomiczne
                     sunRadius: 695700 * scaleFactor, // wielkosc slonca
                     flarePower: 800, // sila rozblysku
-                    ambientLightPower: 0.8, // sila swiatła otoczenia
+                    ambientLightPower: 1, // sila swiatła otoczenia
                     spaceHorizonDistance: 600000, // max wielkość bańki kosmosu
                     description: data.description || 'Najgorętsza planeta Układu Słonecznego',
                     moons: data.moons || [],

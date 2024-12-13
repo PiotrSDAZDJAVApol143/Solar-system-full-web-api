@@ -1,17 +1,19 @@
-// focusOnObject.js
+//src/utils/focusOnObject.js
 import * as THREE from 'three';
-import { Tween, Easing } from '@tweenjs/tween.js';
+import TWEEN from '@tweenjs/tween.js';
 
-export function focusOnObject(object, camera, controls, state, tweenGroup) {
+export function focusOnObject(object, camera, controls, state) {
     if (!controls || !camera || !object) {
         console.error("Brak niezbędnych argumentów w focusOnObject.");
         return;
     }
 
     const radius = object.userData.radius;
-    console.log('Promień obiektu:', radius);
     const diameter = radius * 2;
-
+    if (!radius || isNaN(radius)) {
+        console.error("Nieprawidłowy promień obiektu:", radius, object);
+        return;
+    }
     let cameraMinDistance;
     let controlsMinDistance;
     let controlsMaxDistance;
@@ -30,6 +32,11 @@ export function focusOnObject(object, camera, controls, state, tweenGroup) {
         controlsMaxDistance = cameraMinDistance * 30;
     }
 
+
+    console.log("Promień obiektu:", radius);
+    console.log("obiekt mały/średni zdefiniowany przez Ciebie");
+    console.log("Minimalna odległość kamery:", cameraMinDistance);
+
     controls.minDistance = controlsMinDistance;
     controls.maxDistance = controlsMaxDistance;
     controls.enableRotate = true;
@@ -39,9 +46,10 @@ export function focusOnObject(object, camera, controls, state, tweenGroup) {
     const targetPosition = new THREE.Vector3();
     object.getWorldPosition(targetPosition);
 
-    state.isTweening = true;
     state.isFollowingObject = true;
     state.currentTargetObject = object;
+    state.previousTargetPosition.copy(targetPosition);
+
 
     // Oblicz kierunek od obiektu do kamery
     const direction = new THREE.Vector3().subVectors(camera.position, targetPosition).normalize();
@@ -52,22 +60,24 @@ export function focusOnObject(object, camera, controls, state, tweenGroup) {
         direction.multiplyScalar(cameraMinDistance)
     );
 
-    // Animacja przejścia kamery
+    console.log('cameraMinDistance:', cameraMinDistance);
+    console.log('newCameraPosition:', newCameraPosition);
+
     const from = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
     const to = { x: newCameraPosition.x, y: newCameraPosition.y, z: newCameraPosition.z };
 
     controls.target.copy(targetPosition);
     state.previousTargetPosition.copy(targetPosition);
 
-    const tween = new Tween(from, tweenGroup)
+    // Usuwamy tweenGroup ze stworzenia Tweena:
+    const tween = new TWEEN.Tween(from)
         .to(to, 2000)
-        .easing(Easing.Quadratic.InOut)
+        .easing(TWEEN.Easing.Quadratic.InOut)
         .onUpdate(() => {
             camera.position.set(from.x, from.y, from.z);
             controls.update();
         })
         .onComplete(() => {
-            state.isTweening = false;
             controls.target.copy(targetPosition);
             controls.update();
         })

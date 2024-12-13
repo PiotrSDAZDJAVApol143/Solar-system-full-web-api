@@ -29,3 +29,12 @@
     margin-left: 20px;
     margin-bottom: 10px;
 }
+.label {
+    color: rgba(131, 125, 125, 0.742);
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    text-shadow: 0 0 5px black;
+    position: relative;
+    cursor: pointer;
+    pointer-events: auto;
+}

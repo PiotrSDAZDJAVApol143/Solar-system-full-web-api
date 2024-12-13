@@ -6,31 +6,29 @@ import { addSunAndLight } from '../../utils/addSunAndLight';
 import { createSpaceHorizon } from '../../utils/createSpaceHorizon';
 import getStarfield from '../../utils/getStarfield';
 import { handleWindowResize } from '../../utils/handleWindowResize';
-import { Tween, Easing, Group } from '@tweenjs/tween.js';
+import TWEEN from '@tweenjs/tween.js';
 import { disposeScene } from '../../utils/disposeScene';
 import { createPlanetRings } from '../../utils/createPlanetRings';
-import { initializeLabelRenderer, createLabel, updateLabelVisibility } from '../../utils/labelUtils';
-import { OrbitTail } from '../../utils/orbitTail';
+import { initializeLabelRenderer } from '../../utils/labelUtils';
 import { focusOnObject } from '../../utils/focusOnObject';
 import { resetCamera } from '../../utils/resetCamera';
 import { initializeGUI } from '../../utils/guiControls';
-import { setMeshProperties, calculateMaxPoints } from '../../utils/planetUtils';
+import { setMeshProperties } from '../../utils/planetUtils';
+import { Moon } from '../Moon/Moon';
 
 let scene, camera, renderer, controls, container, animateId;
 let planetGroup, planetMesh;
 let sunMesh, sunLight, sunPivot, ambientLight;
 let labelRenderer;
-let onWindowResize;
 let occlusionObjects = [];
 let moons = [];
 let orbitTails = [];
 let gui;
 let planetData;
-let guiParams;
 let additionalTextureMesh = null;
 
-
-const tweenGroup = new Group();
+const clock = new THREE.Clock();
+const tweenGroup = new TWEEN.Group();
 const textureLoader = new THREE.TextureLoader();
 
 let state = {
@@ -45,17 +43,33 @@ let initialControlsTarget = new THREE.Vector3();
 let initialMinDistance, initialMaxDistance;
 
 let raycaster = new THREE.Raycaster();
-// Definiujemy progi dla księżyców
-const smallMoonThreshold = 1;  // Możesz dostosować wartości według potrzeb
-const mediumMoonThreshold = 3;
+
+let guiParams = {
+    showObjectNames: false,
+    showOrbitTails: true,
+    showSmallMoons: true,
+    showMediumMoons: true,
+    showLargeMoons: true,
+};
 
 export function initializePlanetScene(containerElement, initPlanetData) {
+    guiParams = {
+        showObjectNames: true,
+        showOrbitTails: true,
+        showSmallMoons: true,
+        showMediumMoons: true,
+        showLargeMoons: true,
+    };
     if (!containerElement) {
         console.error("Brak elementu kontenera!");
         return;
     }
     container = containerElement;
     planetData = initPlanetData;
+    if (!planetData) {
+        console.error("planetData jest null lub undefined");
+        return;
+    }
     if (!container) {
         console.error("Kontener jest null");
         return;
@@ -91,6 +105,9 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         planetGroup.rotation.z = planetData.axialTilt * Math.PI / 180;
     }
     scene.add(planetGroup);
+
+    const scaleFactor = planetData.scaleFactor || 1;
+    console.log("Przekazany scaleFactor do PlanetScene:", scaleFactor);
     const texturePath = planetData.texturePath ? `/${planetData.texturePath}` : null;
     const additionalTexture = planetData.additionalTexture ? `/${planetData.additionalTexture}` : null;
     const cloudTexture = planetData.cloudTexture ? `/${planetData.cloudTexture}` : null;
@@ -110,6 +127,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         specularMapPath
     );
     planetMesh.receiveShadow = true;
+    console.log("Promień planety w PlanetScene:", planetData.radius);
     setMeshProperties(planetMesh, planetData.name, planetData.radius);
     planetGroup.add(planetMesh);
 
@@ -187,6 +205,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
                 float b = texColor.b;
                 if (r <= g + warmThreshold || r <= b + warmThreshold) {
                     discard; 
+             
                 }
 
                 // Dot product - jeśli > 0 to jasna strona, jeśli <= 0 to ciemna
@@ -201,6 +220,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         `,
             transparent: true,
             blending: THREE.AdditiveBlending,
+            depthWrite: false
         });
 
         additionalTextureMesh = new THREE.Mesh(planetMesh.geometry, additionalTextureMaterial);
@@ -215,20 +235,55 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         occlusionObjects.push(ringsMesh);
     }
 
-    // Dodaj księżyce, jeśli są zdefiniowane
+    // Księżyce
+    moons = []; //czyści i wypełnia zbiór od zera
     if (planetData.moons && planetData.moons.length > 0) {
         planetData.moons.forEach(moonData => {
-            const moonMesh = createMoon(moonData);
-            planetGroup.add(moonMesh);
-            moons.push(moonMesh);
-            occlusionObjects.push(moonMesh);
+            const orbitRadius = moonData.semimajorAxis ? (moonData.semimajorAxis * scaleFactor) : 50;
+            const orbitDuration = moonData.orbitalPeriod || 100;
+            const rotationDuration = moonData.rotationPeriod || orbitDuration;
+            const moonTextures = moonData.textures || {};
 
-            // Dodaj ogon orbity, jeśli opcja jest włączona
-            const maxPoints = calculateMaxPoints(moonData.orbitDuration || 100);
-            const orbitTail = new OrbitTail(moonMesh, scene, maxPoints, { color: 0xaaaaaa, opacity: 0.5 });
-            orbitTails.push(orbitTail);
+            const moonParams = {
+                name: moonData.englishName || 'Moon',
+                radius: (moonData.meanRadius * scaleFactor),
+                distance: moonData.semimajorAxis * scaleFactor,
+                scaleFactor: planetData.scaleFactor,
+
+                texturePath: moonTextures.surfaceTexture ? `/${moonTextures.surfaceTexture}` : null,
+                bumpMapPath: moonTextures.bumpMapTexture ? `/${moonTextures.bumpMapTexture}` : null,
+                normalMapPath: moonTextures.normalMapTexture ? `/${moonTextures.normalMapTexture}` : null,
+                aoMapPath: moonTextures.ambientOcclusionMapTexture ? `/${moonTextures.ambientOcclusionMapTexture}` : null,
+                specularMapPath: moonTextures.specularMapTexture ? `/${moonTextures.specularMapTexture}` : null,
+
+                guiParams: guiParams,
+                orbitDuration: moonData.orbitalPeriod || 100,
+                rotationDuration: moonData.rotationPeriod || 100,
+                orbitTilt: moonData.inclination || 0,
+                rotationTilt: moonData.axialTilt || 0,
+                parentPlanet: planetGroup,
+                scene: scene,
+                camera: camera,
+                controls: controls,
+                state: state,
+                occlusionObjects: occlusionObjects,
+                orbitTails: orbitTails,
+                labelRenderer: labelRenderer,
+                raycaster: raycaster,
+
+                isGLTF: moonData.modelPath && moonData.modelPath.endsWith('.gltf'),
+                isPLY: moonData.modelPath && moonData.modelPath.endsWith('.ply'),
+                modelPath: moonData.modelPath || null,
+                scale: 1 * scaleFactor
+            };
+
+            const moon = new Moon(moonParams);
+            moons.push(moon);
+            occlusionObjects.push(moon.mesh);
         });
+
     }
+    occlusionObjects.push(planetMesh);
 
     // Dodaj Słońce i światło
     const sunResult = addSunAndLight(scene, planetData.sunDistance || 100000, planetData.sunRadius || 1000, planetData.flarePower || 900, planetData.ambientLightPower || 5);
@@ -312,14 +367,15 @@ export function disposePlanetScene() {
     planetData = null;
     guiParams = null;
 }
-const clock = new THREE.Clock();
 function animate(time) {
     animateId = requestAnimationFrame(animate);
 
     if (!planetData || !controls || !renderer) return;
 
     controls.update();
-    tweenGroup.update(time);
+
+
+    const deltaTime = clock.getDelta() * 60;
 
     if (planetMesh && planetData.rotationSpeed) {
         const rotationDirection = planetData.rotationSpeed < 0 ? -1 : 1;
@@ -345,22 +401,32 @@ function animate(time) {
         sunPivot.rotation.y += sunOrbitSpeed * 0.01; // Dostosuj szybkość obrotu
     }
 
-    // Aktualizacja księżyców
-    moons.forEach((moon, index) => {
-        if (planetData.moons[index]) {
-            updateMoon(moon, planetData.moons[index]);
-            orbitTails[index].update();
-        }
+ //   // Aktualizacja księżyców
+    moons.forEach(moon => {
+       moon.update(deltaTime);
     });
 
-    // Aktualizacja etykiet
+    // Śledzenie obiektu, jeśli jest ustawione focusOnObject
+    if (state.currentTargetObject && state.isFollowingObject && !state.isTweening) {
+        const targetPosition = new THREE.Vector3();
+        state.currentTargetObject.getWorldPosition(targetPosition);
+
+        const deltaPosition = new THREE.Vector3().subVectors(targetPosition, state.previousTargetPosition);
+
+        camera.position.add(deltaPosition);
+        controls.target.add(deltaPosition);
+
+        state.previousTargetPosition.copy(targetPosition);
+        controls.update();
+    } else {
+        controls.update();
+    }
+
     if (labelRenderer) {
-        moons.forEach((moon) => {
-            updateLabelVisibility(moon.labelObject, moon, camera, raycaster, occlusionObjects);
-        });
         labelRenderer.render(scene, camera);
     }
 
+    tweenGroup.update(time);
     renderer.render(scene, camera);
 }
 
@@ -377,7 +443,8 @@ function onDocumentMouseDown(event) {
     );
 
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(moons, true);
+    const clickableObjects = moons.map(moon => moon.mesh);
+    const intersects = raycaster.intersectObjects(clickableObjects, true);
 
     if (intersects.length > 0) {
         const selectedObject = intersects[0].object;
@@ -385,64 +452,23 @@ function onDocumentMouseDown(event) {
     }
 }
 
+
 // Funkcje pomocnicze
 
-function createMoon(moonData) {
-    const moonMesh = createPlanet(
-        moonData.radius,
-        moonData.texturePath,
-        moonData.shininess || 5,
-        moonData.normalMapPath,
-        moonData.bumpMapPath,
-        moonData.aoMapPath,
-        moonData.specularMapPath
-    );
-
-    setMeshProperties(moonMesh, moonData.name, moonData.radius);
-
-    // Ustawienie pozycji księżyca na orbicie
-    const orbitRadius = moonData.orbitRadius || 50;
-    const orbitSpeed = (2 * Math.PI) / (moonData.orbitDuration || 100);
-
-    moonMesh.userData = {
-        orbitRadius,
-        orbitSpeed,
-        orbitAngle: Math.random() * 2 * Math.PI,
-    };
-
-    // Dodanie etykiety
-    const labelObject = createLabel(moonData.name);
-    moonMesh.add(labelObject);
-    moonMesh.labelObject = labelObject;
-    labelObject.userData.shouldShow = true;
-
-    return moonMesh;
-}
-
-function updateMoon(moonMesh, moonData) {
-    moonMesh.userData.orbitAngle += moonMesh.userData.orbitSpeed;
-
-    const x = Math.cos(moonMesh.userData.orbitAngle) * moonMesh.userData.orbitRadius;
-    const z = Math.sin(moonMesh.userData.orbitAngle) * moonMesh.userData.orbitRadius;
-
-    moonMesh.position.set(x, 0, z);
-}
 
 function toggleObjectNames() {
     moons.forEach((moon) => {
-        const radius = moon.userData.radius;
-        let shouldShow = true;
+        const radius = moon.radius;
+        let shouldShow = false;
 
-        if (!guiParams.showObjectNames) {
-            shouldShow = false;
-        } else if (radius < smallMoonThreshold) {
-            shouldShow = guiParams.showSmallMoons;
-        } else if (radius < mediumMoonThreshold) {
-            shouldShow = guiParams.showMediumMoons;
-        } else {
-            shouldShow = guiParams.showLargeMoons;
+        if (radius <= 0.008 && guiParams.showSmallMoons) {
+            shouldShow = true;
+        } else if (radius > 0.008 && radius < 0.25 && guiParams.showMediumMoons) {
+            shouldShow = true;
+        } else if (radius >= 0.25 && guiParams.showLargeMoons) {
+            shouldShow = true;
         }
 
-        moon.labelObject.userData.shouldShow = shouldShow;
+        moon.label.userData.shouldShow = guiParams.showObjectNames && shouldShow;
     });
 }
