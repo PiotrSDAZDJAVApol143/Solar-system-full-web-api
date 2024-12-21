@@ -1,4 +1,4 @@
-// src/pages/Library/Planets/Earth/Earth.js
+// src/pages/Library/Planets/Mars/Mars.js
 import React, { useEffect, useState } from 'react';
 import Planet from '../../../../components/Planet/Planet';
 import '../../../../components/Planet/Planet.css';
@@ -6,10 +6,10 @@ import axios from 'axios';
 import {getScaleFactor} from "../../../../config";
 import { focusOnObjectFromList } from "../../../../components/Planet/PlanetScene";
 
-function Earth(){
+function Mars(){
     const [planetData, setPlanetData] = useState(null);
     useEffect(()=>{
-        axios.get("http://localhost:8080/api/solarbodies/earth")
+        axios.get("http://localhost:8080/api/solarbodies/mars")
             .then(response => {
                 const data = response.data;
                 const textures = data.textures || {};
@@ -30,7 +30,7 @@ function Earth(){
                     perihelion: data.perihelion || null,
                     aphelion: data.aphelion || null,
                     inclination: data.inclination || 0,
-                    sunOrbitDuration: 10957.5,
+                    sunOrbitDuration: 20610,
                     mass: (data.mass * 100).toFixed(2),
                     vol: (data.vol * 100).toFixed(2),
                     escapeSpeed: data.escapeSpeed || null,
@@ -54,10 +54,10 @@ function Earth(){
                     rotationSpeed: data.rotationPeriod || 24,
                     sunDistance: data.semiMajorAxis *scaleFactor || 1, // Jednostki astronomiczne
                     sunRadius: 695700 * scaleFactor, // wielkosc slonca
-                    flarePower: 600, // sila rozblysku
-                    ambientLightPower: 2, // sila swiatła otoczenia
+                    flarePower: 400, // sila rozblysku
+                    ambientLightPower: 1.8, // sila swiatła otoczenia
                     spaceHorizonDistance: 600000, // max wielkość bańki kosmosu
-                    description: data.description || 'Nasz dom',
+                    description: data.description || 'Czerwona Planeta',
                     moons: data.moons || [],
                     rings: null, // Jeśli dostępne
                     orbitalPeriod: data.orbitalPeriod,
@@ -102,21 +102,21 @@ function Earth(){
                                     ({Math.abs(planetData.rotationPeriod / 24).toLocaleString('pl-PL', {maximumFractionDigits: 2})} dni)</p>
                                 <p>Liczba księżyców: {planetData.moonCount}</p>
                                 <p>Księżyce:</p>
-                                    <ul>
-                                        {planetData.moons && planetData.moons.length > 0
-                                            ? planetData.moons.map((moon, index) => (
-                                                <li key={index}>
-                                                    <a href="#" onClick={(e) => {
-                                                            e.preventDefault();
-                                                        focusOnObjectFromList(moon.englishName); // Przejście do księżyca
-                                                    }}
-                                                    >
-                                                        {moon.englishName}
-                                                    </a>
-                                                </li>
-                                            ))
-                                            : "Brak księżyców"}
-                                    </ul>
+                                <ul>
+                                    {planetData.moons && planetData.moons.length > 0
+                                        ? planetData.moons.map((moon, index) => (
+                                            <li key={index}>
+                                                <a href="#" onClick={(e) => {
+                                                    e.preventDefault();
+                                                    focusOnObjectFromList(moon.englishName); // Przejście do księżyca
+                                                }}
+                                                >
+                                                    {moon.englishName}
+                                                </a>
+                                            </li>
+                                        ))
+                                        : "Brak księżyców"}
+                                </ul>
                             </div>
                         ) : (
                             <p>Ładowanie danych o planecie...</p>
@@ -128,4 +128,4 @@ function Earth(){
     );
 }
 
-export default Earth;
+export default Mars;

@@ -32,6 +32,10 @@ export function updateLabelVisibility(labelObject, targetObject, camera, raycast
         labelObject.visible = false;
         return;
     }
+    if (!targetObject) {
+        labelObject.visible = false;
+        return;
+    }
     // Pobierz pozycję obiektu w przestrzeni świata
     let targetPosition = new THREE.Vector3();
     targetObject.getWorldPosition(targetPosition);
@@ -39,9 +43,7 @@ export function updateLabelVisibility(labelObject, targetObject, camera, raycast
     // Ustaw raycaster
     raycaster.set(camera.position, targetPosition.clone().sub(camera.position).normalize());
 
-    let filteredOcclusionObjects = occlusionObjects.filter(obj => obj !== targetObject);
-
-    // Sprawdź przecięcia
+    let filteredOcclusionObjects = occlusionObjects.filter(obj => obj && obj.isObject3D && obj !== targetObject);
     let intersects = raycaster.intersectObjects(filteredOcclusionObjects, true);
 
     if (intersects.length > 0) {

@@ -72,6 +72,10 @@ public class SolarBodyMapper {
             dto.setVol(null);
         }
 
+        dto.setTextures(generateTextures(solarBody.getEnglishName(), solarBody.getBodyType()));
+        String modelPath = generateModelPath(solarBody.getEnglishName(), solarBody.getBodyType());
+        dto.setModel(modelPath);
+
         // Mapowanie księżyców
         if (solarBody.getMoons() != null && !solarBody.getMoons().isEmpty()) {
             Set<MoonDTO> moonDTOs = solarBody.getMoons().stream()
@@ -81,8 +85,6 @@ public class SolarBodyMapper {
         } else {
             dto.setMoons(new HashSet<>());
         }
-        dto.setTextures(generateTextures(solarBody.getEnglishName(), solarBody.getBodyType()));
-        dto.setModel(generateModelPath(solarBody.getEnglishName(), solarBody.getBodyType()));
 
         return dto;
     }
@@ -120,15 +122,25 @@ public class SolarBodyMapper {
     }
     private static String generateModelPath(String englishName, String bodyType) {
         String folderName = getFolderNameFromBodyType(bodyType);
-        String basePath = "assets/models/" + folderName + "/";
+        String basePath = "assets/models/3D_models/";
         String baseName = englishName.replaceAll("\\s+", "_").toLowerCase();
-        String modelPath = basePath + baseName + ".glb";
-
-        if (fileExists(modelPath)) {
-            return modelPath;
-        } else {
-            return null;
+        // Najpierw sprawdzamy .glb
+        String glbPath = basePath + baseName + ".glb";
+        if (fileExists(glbPath)) {
+            return glbPath;
         }
+
+        // Jeśli nie ma .glb, sprawdzamy .ply
+        String plyPath = basePath + baseName + ".ply";
+        if (fileExists(plyPath)) {
+            return plyPath;
+        }
+        int randDefault = (int)(Math.random() * 5) + 1;
+        String defaultModel = basePath + "default" + randDefault + ".glb";
+        if (fileExists(defaultModel)) {
+            return defaultModel;
+        }
+        return null;
     }
     private static boolean fileExists(String relativePath) {
         Path projectDir = Paths.get(System.getProperty("user.dir"));
@@ -141,6 +153,9 @@ public class SolarBodyMapper {
         MoonDTO moonDTO = new MoonDTO();
         moonDTO.setEnglishName(moon.getMoon()); // Mapowanie pola 'moon' na 'englishName'
         moonDTO.setRel(moon.getRel()); // Mapowanie rel
+        moonDTO.setTextures(generateTextures(moon.getMoon(), "moon"));
+        String modelPath = generateModelPath(moon.getMoon(), "moon");
+        moonDTO.setModel(modelPath);
         return moonDTO;
     }
     public static SolarBodies convertToEntity(SolarBodyDTO dto) {

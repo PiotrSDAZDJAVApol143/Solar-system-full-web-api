@@ -6,8 +6,8 @@ export function createSceneCameraAndRenderer(container, w, h, cameraPosition, pl
     const scene = new THREE.Scene();
 
     const angle = THREE.MathUtils.degToRad(rotationAngle);
-    const cameraX = Math.cos(angle) * cameraPosition;
-    const cameraZ = Math.sin(angle) * cameraPosition;
+    const cameraX = Math.cos(angle) * (planetRadius * 2.5);
+    const cameraZ = Math.sin(angle) * (planetRadius * 2.5);
 
     const camera = new THREE.PerspectiveCamera(75, w / h, 0.01, 600000);
     camera.position.set(cameraX, 0, cameraZ);
@@ -24,8 +24,8 @@ export function createSceneCameraAndRenderer(container, w, h, cameraPosition, pl
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.minDistance = planetRadius + planetRadius * 0.2;
-    controls.maxDistance = planetRadius*10;
+    controls.minDistance = planetRadius * 2.1;
+    controls.maxDistance = planetRadius*50;
 
     return { scene, camera, renderer, controls };
 }

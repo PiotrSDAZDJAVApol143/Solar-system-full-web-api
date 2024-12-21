@@ -6,7 +6,6 @@ import { addSunAndLight } from '../../utils/addSunAndLight';
 import { createSpaceHorizon } from '../../utils/createSpaceHorizon';
 import getStarfield from '../../utils/getStarfield';
 import { handleWindowResize } from '../../utils/handleWindowResize';
-import TWEEN from '@tweenjs/tween.js';
 import { disposeScene } from '../../utils/disposeScene';
 import { createPlanetRings } from '../../utils/createPlanetRings';
 import { initializeLabelRenderer } from '../../utils/labelUtils';
@@ -26,9 +25,9 @@ let orbitTails = [];
 let gui;
 let planetData;
 let additionalTextureMesh = null;
+let currentPlanetData = null;
 
 const clock = new THREE.Clock();
-const tweenGroup = new TWEEN.Group();
 const textureLoader = new THREE.TextureLoader();
 
 let state = {
@@ -46,26 +45,22 @@ let raycaster = new THREE.Raycaster();
 
 let guiParams = {
     showObjectNames: false,
-    showOrbitTails: true,
-    showSmallMoons: true,
-    showMediumMoons: true,
-    showLargeMoons: true,
+    showOrbitTails: false,
+    showSmallMoons: false,
+    showMediumMoons: false,
+    showLargeMoons: false,
+    timeScale: 2000
 };
 
 export function initializePlanetScene(containerElement, initPlanetData) {
-    guiParams = {
-        showObjectNames: true,
-        showOrbitTails: true,
-        showSmallMoons: true,
-        showMediumMoons: true,
-        showLargeMoons: true,
-    };
+
     if (!containerElement) {
         console.error("Brak elementu kontenera!");
         return;
     }
     container = containerElement;
     planetData = initPlanetData;
+    planetData.bodyType = "Planet";
     if (!planetData) {
         console.error("planetData jest null lub undefined");
         return;
@@ -96,6 +91,10 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     initialMinDistance = controls.minDistance;
     initialMaxDistance = controls.maxDistance;
 
+    // Dodanie referencji kamery, kontrolerów i stanu do planetData
+    planetData.camera = camera;
+    planetData.controls = controls;
+    planetData.state = state;
 
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -130,6 +129,18 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     console.log("Promień planety w PlanetScene:", planetData.radius);
     setMeshProperties(planetMesh, planetData.name, planetData.radius);
     planetGroup.add(planetMesh);
+
+    planetMesh.userData.bodyType = "Planet";
+    planetMesh.userData.name = planetData.name;
+    planetMesh.userData.description = planetData.description || '';
+    planetMesh.userData.meanRadiusKm = planetData.meanRadiusKm;
+    planetMesh.userData.semiMajorAxis = planetData.semiMajorAxis;
+    planetMesh.userData.orbitalPeriod = planetData.orbitalPeriod;
+    planetMesh.userData.gravity = planetData.gravity;
+    planetMesh.userData.avgTemp = planetData.avgTemp;
+    planetMesh.userData.rotationPeriod = planetData.rotationPeriod;
+    planetMesh.userData.mass = planetData.mass;
+    planetMesh.userData.moons = planetData.moons;
 
     if (planetData.cloudTexture) {
         const cloudsTexturePath = `/${planetData.cloudTexture}`;
@@ -173,6 +184,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
                 map: { value: additionalMap },
                 lightDirection: { value: new THREE.Vector3(1,0,0) }, // Kierunek światła - aktualizuj w animate()
                 warmThreshold: { value: 0.001 }, // reguluj próg ciepła
+
             },
             vertexShader: `
             varying vec2 vUv;
@@ -237,6 +249,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
 
     // Księżyce
     moons = []; //czyści i wypełnia zbiór od zera
+    planetData.moonsInstances = moons;
     if (planetData.moons && planetData.moons.length > 0) {
         planetData.moons.forEach(moonData => {
             const orbitRadius = moonData.semimajorAxis ? (moonData.semimajorAxis * scaleFactor) : 50;
@@ -247,8 +260,10 @@ export function initializePlanetScene(containerElement, initPlanetData) {
             const moonParams = {
                 name: moonData.englishName || 'Moon',
                 radius: (moonData.meanRadius * scaleFactor),
+                meanRadiusKm: moonData.meanRadius,
                 distance: moonData.semimajorAxis * scaleFactor,
                 scaleFactor: planetData.scaleFactor,
+                parentPlanetName: planetData.name,
 
                 texturePath: moonTextures.surfaceTexture ? `/${moonTextures.surfaceTexture}` : null,
                 bumpMapPath: moonTextures.bumpMapTexture ? `/${moonTextures.bumpMapTexture}` : null,
@@ -259,6 +274,9 @@ export function initializePlanetScene(containerElement, initPlanetData) {
                 guiParams: guiParams,
                 orbitDuration: moonData.orbitalPeriod || 100,
                 rotationDuration: moonData.rotationPeriod || 100,
+                mass: moonData.mass,
+                gravity: moonData.gravity,
+                avgTemp: moonData.avgTemp,
                 orbitTilt: moonData.inclination || 0,
                 rotationTilt: moonData.axialTilt || 0,
                 parentPlanet: planetGroup,
@@ -271,9 +289,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
                 labelRenderer: labelRenderer,
                 raycaster: raycaster,
 
-                isGLTF: moonData.modelPath && moonData.modelPath.endsWith('.gltf'),
-                isPLY: moonData.modelPath && moonData.modelPath.endsWith('.ply'),
-                modelPath: moonData.modelPath || null,
+                modelPath: moonData.model || null,
                 scale: 1 * scaleFactor
             };
 
@@ -284,6 +300,13 @@ export function initializePlanetScene(containerElement, initPlanetData) {
 
     }
     occlusionObjects.push(planetMesh);
+
+    currentPlanetData = {
+        name: initPlanetData.name,
+        moons: initPlanetData.moons || [],
+        scaleFactor: initPlanetData.scaleFactor || 1,
+        // Dodaj inne potrzebne dane
+    };
 
     // Dodaj Słońce i światło
     const sunResult = addSunAndLight(scene, planetData.sunDistance || 100000, planetData.sunRadius || 1000, planetData.flarePower || 900, planetData.ambientLightPower || 5);
@@ -303,21 +326,21 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     // Inicjalizacja labelRenderer
     labelRenderer = initializeLabelRenderer(container);
 
-    const resetCameraFunction = () => resetCamera(camera, controls, state, initialCameraPosition, initialControlsTarget, initialMinDistance, initialMaxDistance, tweenGroup);
+    const resetCameraFunction = () => {
+        stopFollowing(state, camera, controls, initialCameraPosition, initialControlsTarget, initialMinDistance, initialMaxDistance);
+        resetCamera(
+            camera,
+            controls,
+            state,
+            initialCameraPosition,
+            initialControlsTarget,
+            initialMinDistance,
+            initialMaxDistance,
+        );
+        updatePlanetInfo(planetMesh);
+    };
     // Inicjalizacja GUI
-    gui = initializeGUI(
-        {
-            showObjectNames: true,
-            showOrbitTails: false,
-            showSmallMoons: true,
-            showMediumMoons: true,
-            showLargeMoons: true,
-        },
-        toggleObjectNames,
-        orbitTails,
-        resetCameraFunction,
-        container
-    );
+    gui = initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCameraFunction, container);
 
     // Nasłuchiwanie zdarzeń
     window.addEventListener('resize', onWindowResizeHandler, false);
@@ -365,9 +388,8 @@ export function disposePlanetScene() {
     gui = null;
     labelRenderer = null;
     planetData = null;
-    guiParams = null;
 }
-function animate(time) {
+function animate() {
     animateId = requestAnimationFrame(animate);
 
     if (!planetData || !controls || !renderer) return;
@@ -375,35 +397,47 @@ function animate(time) {
     controls.update();
 
 
-    const deltaTime = clock.getDelta() * 60;
+    const deltaTime = clock.getDelta();
+    const cosmicDelta = deltaTime * guiParams.timeScale;
 
     if (planetMesh && planetData.rotationSpeed) {
         const rotationDirection = planetData.rotationSpeed < 0 ? -1 : 1;
+        const rotationPeriodSeconds = planetData.rotationPeriod * 3600;
+        const angularVelocity = (2 * Math.PI) / rotationPeriodSeconds;
         const rotationSpeed = Math.abs(planetData.rotationSpeed);
-        const rotationDelta = rotationDirection * ((2 * Math.PI) / (rotationSpeed * 60));
-        planetMesh.rotation.y += rotationDelta;
-
-        // Obróć dodatkową teksturę nocną w taki sam sposób
+        planetMesh.rotation.y += angularVelocity * cosmicDelta;
         if (additionalTextureMesh) {
-            additionalTextureMesh.rotation.y += rotationDelta;
+            additionalTextureMesh.rotation.y += angularVelocity * cosmicDelta;
         }
     }
 
     // Obrót chmur
     if (planetMesh.cloudsMesh) {
-        const cloudRotationSpeed = planetData.cloudRotationSpeed || (Math.abs(planetData.rotationSpeed) * 0.9);
+        const cloudPeriodSeconds = planetData.cloudRotationSpeed * 3600;
+        const cloudAngularVelocity = (2 * Math.PI) / cloudPeriodSeconds;
         const rotationDirection = planetData.rotationSpeed < 0 ? -1 : 1;
-        planetMesh.cloudsMesh.rotation.y += rotationDirection * ((2 * Math.PI) / (cloudRotationSpeed * 60));
+        planetMesh.cloudsMesh.rotation.y += cloudAngularVelocity * cosmicDelta;
     }
     // Obrót SunPivot
     if (sunPivot) {
-        const sunOrbitSpeed = (2 * Math.PI) / (planetData.sunOrbitDuration || 2638); // Długość orbity w godzinach
-        sunPivot.rotation.y += sunOrbitSpeed * 0.01; // Dostosuj szybkość obrotu
+        const sunOrbitSeconds = (planetData.sunOrbitDuration || 2638) * 3600;
+        const sunAngularVelocity = (2 * Math.PI) / sunOrbitSeconds;
+        sunPivot.rotation.y += sunAngularVelocity * cosmicDelta;
+    }
+    if (additionalTextureMesh) {
+        const planetPosition = new THREE.Vector3();
+        planetMesh.getWorldPosition(planetPosition);
+
+        const sunPosition = new THREE.Vector3();
+        sunMesh.getWorldPosition(sunPosition);
+
+        const directionToSun = new THREE.Vector3().subVectors(sunPosition, planetPosition).normalize();
+        additionalTextureMesh.material.uniforms.lightDirection.value.copy(directionToSun);
     }
 
  //   // Aktualizacja księżyców
     moons.forEach(moon => {
-       moon.update(deltaTime);
+       moon.update(cosmicDelta);
     });
 
     // Śledzenie obiektu, jeśli jest ustawione focusOnObject
@@ -425,8 +459,6 @@ function animate(time) {
     if (labelRenderer) {
         labelRenderer.render(scene, camera);
     }
-
-    tweenGroup.update(time);
     renderer.render(scene, camera);
 }
 
@@ -436,6 +468,11 @@ function onWindowResizeHandler() {
 
 function onDocumentMouseDown(event) {
     event.preventDefault();
+
+    if (state.isTweening) {
+        console.log("Animacja w toku, pomijam nowe żądanie śledzenia.");
+        return;
+    }
 
     const mouse = new THREE.Vector2(
         (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
@@ -448,7 +485,11 @@ function onDocumentMouseDown(event) {
 
     if (intersects.length > 0) {
         const selectedObject = intersects[0].object;
-        focusOnObject(selectedObject, camera, controls, state, tweenGroup);
+        // Jeśli już śledzimy ten sam obiekt, pomijamy
+        if (state.currentTargetObject === selectedObject && state.isFollowingObject) {
+            return;
+        }
+        focusOnObject(selectedObject, camera, controls, state);
     }
 }
 
@@ -471,4 +512,145 @@ function toggleObjectNames() {
 
         moon.label.userData.shouldShow = guiParams.showObjectNames && shouldShow;
     });
+}
+function findBodyObject(object) {
+    let current = object;
+    while (current) {
+        if (current.userData && current.userData.bodyType) {
+            return current;
+        }
+        current = current.parent;
+    }
+    return null;
+}
+export function updatePlanetInfo(targetObject) {
+    const planetInfoDiv = document.getElementById('planet-info');
+    if (!planetInfoDiv || !targetObject) return;
+
+    const bodyObject = findBodyObject(targetObject);
+    if (!bodyObject) {
+        console.error('Nieznany typ obiektu:', targetObject);
+        return;
+    }
+
+    const isPlanet = bodyObject.userData.bodyType === "Planet";
+    const isMoon = bodyObject.userData.bodyType === "Moon";
+    const data = bodyObject.userData;
+    let infoHTML = '';
+
+    if (isPlanet) {
+        const planetData = data;
+        infoHTML = `
+            <h2>Informacje o ${planetData.name || 'Brak danych'}</h2>
+            <p><u>${planetData.description || 'Brak opisu'}</u></p>
+            <p>Średnica: ${(planetData.meanRadiusKm * 2).toLocaleString('pl-PL')} km</p>
+            <p>Średnia odległość od Słońca: ${planetData.semiMajorAxis?.toLocaleString('pl-PL') || "Brak danych"} km</p>
+            <p>Rok trwa: ${planetData.orbitalPeriod || "Brak danych"} dni</p>
+            <p>Grawitacja: ${planetData.gravity?.toFixed(2) || "Brak danych"} m/s²</p>
+            <p>Średnia temperatura: ${
+            planetData.avgTemp ? `${planetData.avgTemp}°C / ${(parseFloat(planetData.avgTemp) + 273.15).toFixed(2)}°K` : "Brak danych"
+        }</p>
+            <p>Masa: ${planetData.mass || "Brak danych"}</p>
+          
+            <p>Rok trwa: ${planetData.orbitalPeriod || "Brak danych"} dni</p>
+            <p>
+                                    Doba
+                                    trwa: ${Math.abs(planetData.rotationPeriod).toLocaleString('pl-PL', {maximumFractionDigits: 2})} godzin
+                                    /
+                                    (${Math.abs(planetData.rotationPeriod / 24).toLocaleString('pl-PL', {maximumFractionDigits: 2})} dni)</p>
+            <p>Liczba księżyców: ${planetData.moons?.length || 0}</p>
+            <p>Księżyce:</p>
+            <ul>
+                ${
+            planetData.moons?.length
+                ? planetData.moons.map(moon =>
+                    `<li><a href="#" data-targetname="${moon.englishName}">${moon.englishName}</a></li>`
+                ).join('')
+                : "Brak księżyców"
+        }
+            </ul>
+        `;
+    } else if (isMoon) {
+        const moonData = data;
+        const parentPlanetName = moonData.parentPlanetName || "Nieznana";
+        infoHTML = `
+            <h2>Informacje o ${moonData.name || 'Brak danych'}</h2>
+            <p>Średnica: ${ (moonData.meanRadiusKm * 2).toLocaleString('pl-PL') } km</p>
+            <p>Odległość od planety macierzystej: ${moonData.distance?.toLocaleString('pl-PL') || "Brak danych"} km</p>
+            <p>Okres orbitalny: ${moonData.orbitDuration?.toFixed(2) || "Brak danych"} dni</p>
+            <p>Okres rotacji: ${
+            moonData.rotationDuration ? `${moonData.rotationDuration.toFixed(2)} godzin` : "Brak danych"
+        } (${moonData.rotationDuration / 24 || "Brak danych"} dni)</p>
+            <p>Nachylenie orbity: ${moonData.orbitTilt || "Brak danych"}°</p>
+            <p>Nachylenie osi: ${moonData.rotationTilt || "Brak danych"}°</p>
+            <p>Grawitacja: ${moonData.gravity?.toFixed(2) || "Brak danych"} m/s²</p>
+            <p>Średnia temperatura: ${
+            moonData.avgTemp !== null && moonData.avgTemp !== undefined
+                ? ` ${(moonData.avgTemp - 273.15).toFixed(2)}°C /${moonData.avgTemp.toFixed(2)}°K`
+                : "Brak danych"
+        }</p>
+            <p>Masa: ${moonData.mass ? `${(moonData.mass * 100).toFixed(2)} % masy Ziemi` : "Brak danych"}</p>
+            <p>Krąży wokół: <a href="#" data-targetname="${parentPlanetName}">${parentPlanetName}</a></p>
+        `;
+    } else {
+        console.error('Nieznany typ obiektu:', targetObject);
+        return;
+    }
+
+    planetInfoDiv.innerHTML = infoHTML;
+
+    // Teraz, po wstawieniu HTML, znajdź wszystkie linki z data-targetname i dodaj im event listener
+    const links = planetInfoDiv.querySelectorAll('a[data-targetname]');
+    links.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetName = link.getAttribute('data-targetname');
+            focusOnObjectFromList(targetName);
+        });
+    });
+}
+
+export function focusOnObjectFromList(objectName) {
+    const moon = moons.find((m) => m.name === objectName);
+
+    // Jeśli trwa animacja, pomijamy
+    if (state.isTweening) {
+        console.log("Animacja w toku, pomijam nowe żądanie śledzenia.");
+        return;
+    }
+    if (moon) {
+        // Sprawdzamy czy to ten sam obiekt i już go śledzimy
+        if (state.currentTargetObject === moon.mesh && state.isFollowingObject) {
+            return;
+        }
+        console.log("Przełączanie na księżyc");
+        focusOnObject(moon.mesh, camera, controls, state);
+        updatePlanetInfo(moon.mesh);
+    } else if (objectName === planetData.name) {
+        // Sprawdzamy czy to ten sam obiekt i już go śledzimy
+        if (state.currentTargetObject === planetMesh && state.isFollowingObject) {
+            return;
+        }
+        console.log("Przełączanie na planetę:");
+        focusOnObject(planetMesh, camera, controls, state);
+        updatePlanetInfo(planetMesh);
+    } else {
+        console.error('Nie znaleziono obiektu');
+    }
+}
+function stopFollowing(state, camera, controls, initialCameraPosition, initialControlsTarget, initialMinDistance, initialMaxDistance) {
+    state.isFollowingObject = false;
+    state.currentTargetObject = null;
+    state.isTweening = false;
+
+    controls.minDistance = initialMinDistance;
+    controls.maxDistance = initialMaxDistance;
+    controls.enableRotate = true;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+
+    // Przywracamy pozycję kamery i target jeśli to potrzebne:
+    controls.target.copy(initialControlsTarget);
+    camera.position.copy(initialCameraPosition);
+    controls.update();
 }
