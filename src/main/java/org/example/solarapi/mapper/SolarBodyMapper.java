@@ -92,7 +92,12 @@ public class SolarBodyMapper {
     private static TexturesDTO generateTextures(String englishName, String bodyType) {
         TexturesDTO textures = new TexturesDTO();
         String baseName = englishName.replaceAll("\\s+", "_").toLowerCase();
-        String basePath = "assets/textures/" + baseName + "/";
+        String basePath;
+        if ("moon".equalsIgnoreCase(bodyType)) {
+            basePath = "assets/textures/moon/";
+        } else {
+            basePath = "assets/textures/" + baseName + "/";
+        }
 
         // Generowanie ścieżek do poszczególnych tekstur bez rozszerzenia
         Map<String, Consumer<String>> textureSetters = new HashMap<>();

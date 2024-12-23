@@ -24,8 +24,8 @@ export function createSceneCameraAndRenderer(container, w, h, cameraPosition, pl
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.minDistance = planetRadius * 2.1;
-    controls.maxDistance = planetRadius*50;
+    controls.minDistance = planetRadius * 1.1;
+    controls.maxDistance = planetRadius*500;
 
     return { scene, camera, renderer, controls };
 }

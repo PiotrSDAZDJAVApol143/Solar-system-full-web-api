@@ -24,6 +24,19 @@ public class SolarBodiesService {
     @Autowired
     private HttpClientService<SolarBodies> httpClientService;
 
+    /**
+     * Mapa zawierająca nazwy „francuskie” (z akcentami) -> angielskie odpowiedniki,
+     * tak aby unikać problemów z API.
+     * Można dowolnie rozszerzyć tę mapę.
+     */
+    private static final Map<String, String> specialNameMap = Map.of(
+
+            "Psamathée","Psamathe"
+
+            // dodawaj kolejne, jeśli API wymaga
+    );
+    private final Set<String> alreadyFailedNames = new HashSet<>();
+
     @Transactional
     public void saveSolarBodiesData(String englishName) {
         String encodedName = HttpClientService.encodeValue(englishName.toLowerCase());
@@ -114,7 +127,6 @@ public class SolarBodiesService {
         }
         return solarBody;
     }
-
     private SolarBodies fetchAndSaveFromExternalAPI(String englishName) {
         try {
             String encodedName = HttpClientService.encodeValue(englishName.toLowerCase());
@@ -286,26 +298,22 @@ public class SolarBodiesService {
         }
         return null;
     }
+    @Transactional
     public SolarBodyDTO convertToDTOWithFullMoons(SolarBodies solarBody) {
         SolarBodyDTO dto = SolarBodyMapper.convertToDTO(solarBody);
-
         if (dto.getMoons() != null && !dto.getMoons().isEmpty()) {
             Set<MoonDTO> expandedMoons = new HashSet<>();
             for (MoonDTO basicMoon : dto.getMoons()) {
-                // Próbujemy najpierw po englishName:
+                // Najpierw baza:
                 SolarBodies moonBody = getSolarBodyByName(basicMoon.getEnglishName());
+                // Jak nie ma w bazie, to findOrFetchBody
                 if (moonBody == null) {
-                    // Jeśli brak w bazie i API po nazwie się nie powiedzie to spróbujmy rel
                     moonBody = findOrFetchBody(basicMoon.getEnglishName(), basicMoon.getRel());
                 }
-
                 if (moonBody != null) {
-                    // Konwertujemy SolarBodies na MoonDTO z pełnymi informacjami
-                    // Potrzebujemy nową metodę w SolarBodyMapper do tego:
                     MoonDTO fullMoonDTO = SolarBodyMapper.convertSolarBodyToMoonDTO(moonBody);
                     expandedMoons.add(fullMoonDTO);
                 } else {
-                    // Jeśli nie znaleziono nawet po rel, zostawiamy minimalne informacje
                     expandedMoons.add(basicMoon);
                 }
             }
@@ -314,21 +322,31 @@ public class SolarBodiesService {
         return dto;
     }
     @Transactional
-    public SolarBodies findOrFetchBody(String englishName, String rel) {
-        // 1. Spróbuj znaleźć w bazie
-        SolarBodies body = getSolarBodyByName(englishName);
+    public SolarBodies findOrFetchBody(String possibleFrName, String rel) {
+        // 1. Sprawdź w bazie
+        SolarBodies body = getSolarBodyByName(possibleFrName);
         if (body != null) {
             return body;
         }
 
-        // 2. Nie ma w bazie - spróbuj pobrać z API po englishName
-        SolarBodies fetched = fetchFromApi(englishName);
+        // 2. Zmapuj ewentualną nazwę z akcentami
+        String mappedName = specialNameMap.getOrDefault(possibleFrName, possibleFrName);
+
+        // --- jeśli ta nazwa (mappedName) była już w 'alreadyFailedNames', to daj spokój:
+        if (alreadyFailedNames.contains(mappedName.toLowerCase())) {
+            logger.warning("Skipping fetch for " + possibleFrName + " (mapped to "
+                    + mappedName + ") - it already failed before.");
+            return null;
+        }
+
+        // 3. Próbujemy fetchFromApi
+        SolarBodies fetched = fetchFromApi(mappedName);
         if (fetched != null) {
             return fetched;
         }
 
-        // 3. Jeśli nie znaleziono po englishName a mamy rel, spróbuj po rel
-        if (rel != null && !rel.isEmpty()) {
+        // 4. Rel
+        if (rel != null && !rel.isBlank()) {
             logger.info("Trying to fetch body from rel: " + rel);
             fetched = fetchFromApiByRel(rel);
             if (fetched != null) {
@@ -336,41 +354,111 @@ public class SolarBodiesService {
             }
         }
 
-        // Jeśli wszystko zawiedzie, zwróć null
-        logger.warning("Could not fetch body for name: " + englishName + " and rel: " + rel);
+        // 5. Jeżeli i to się nie powiodło, dorzucamy mappedName do alreadyFailedNames
+        logger.warning("Could not fetch body for name: " + possibleFrName
+                + " (mapped to " + mappedName + ") and rel: " + rel);
+        alreadyFailedNames.add(mappedName.toLowerCase());
         return null;
     }
     private SolarBodies fetchFromApi(String englishName) {
-        logger.info("No local data found for: " + englishName + ", attempting to fetch from API.");
-        String encodedName = HttpClientService.encodeValue(englishName.toLowerCase());
-        String url = "https://api.le-systeme-solaire.net/rest/bodies/" + encodedName;
-        SolarBodies solarBodyDetails = httpClientService.getPlanetDetails(url, SolarBodies.class);
-        return saveIfNotNull(englishName, solarBodyDetails);
-    }
+        logger.info("No local data found for: " + englishName
+                + ", attempting to fetch from main API by name.");
 
-    private SolarBodies fetchFromApiByRel(String rel) {
-        logger.info("Attempting to fetch body from rel: " + rel);
-        SolarBodies solarBodyDetails = httpClientService.getPlanetDetails(rel, SolarBodies.class);
-        // W przypadku rel możemy mieć inną nazwę englishName - odczytamy z solarBodyDetails
-        if (solarBodyDetails != null && solarBodyDetails.getEnglishName() != null) {
-            return saveIfNotNull(solarBodyDetails.getEnglishName(), solarBodyDetails);
-        }
-        return null;
-    }
-
-    private SolarBodies saveIfNotNull(String englishName, SolarBodies solarBodyDetails) {
-        if (solarBodyDetails == null) {
-            logger.warning("Could not find data for: " + englishName + " even from external API.");
+        // Obsługa ewentualnego wielokrotnego wywołania
+        if (alreadyFailedNames.contains(englishName.toLowerCase())) {
+            logger.warning("Skipping fetchFromApi(" + englishName
+                    + ") because it was already flagged as failed.");
             return null;
         }
 
+        String encodedName = HttpClientService.encodeValue(englishName.toLowerCase());
+        String url = "https://api.le-systeme-solaire.net/rest/bodies/" + encodedName;
+
+        SolarBodies solarBodyDetails = httpClientService.getPlanetDetails(url, SolarBodies.class);
+        SolarBodies result = saveIfNotNull(englishName, solarBodyDetails);
+
+        // Jeżeli się nie udało, dodajemy do alreadyFailedNames
+        if (result == null) {
+            logger.warning("fetchFromApi for " + englishName + " returned null => add to alreadyFailedNames");
+            alreadyFailedNames.add(englishName.toLowerCase());
+        }
+        return result;
+    }
+
+    /**
+     * Uderzamy w API bezpośrednio po polu "rel" (np. "https://api.le-systeme-solaire.net/rest/bodies/psamathee").
+     */
+    private SolarBodies fetchFromApiByRel(String rel) {
+        logger.info("Attempting to fetch body from rel: '" + rel + "'");
+        if (rel == null || rel.isBlank()) {
+            logger.severe("REL is null or blank: " + rel);
+            return null;
+        }
+
+        rel = rel.trim();
+        if (!(rel.startsWith("http://") || rel.startsWith("https://"))) {
+            logger.severe("REL does not start with http or https: " + rel);
+            return null;
+        }
+
+        // (opcjonalnie) sprawdźmy, czy rel też nie w alreadyFailed:
+        if (alreadyFailedNames.contains(rel.toLowerCase())) {
+            logger.warning("Skipping fetchFromApiByRel(" + rel
+                    + ") because it was flagged as failed.");
+            return null;
+        }
+
+        try {
+            SolarBodies solarBodyDetails = httpClientService.getPlanetDetails(rel, SolarBodies.class);
+            if (solarBodyDetails != null && solarBodyDetails.getEnglishName() != null) {
+                SolarBodies saved = saveIfNotNull(solarBodyDetails.getEnglishName(), solarBodyDetails);
+                if (saved == null) {
+                    // Znów, jeżeli się nie udało – dopisz do alreadyFailed
+                    alreadyFailedNames.add(rel.toLowerCase());
+                }
+                return saved;
+            } else {
+                logger.warning("fetchFromApiByRel got null or missing englishName for rel=" + rel);
+                alreadyFailedNames.add(rel.toLowerCase());
+                return null;
+            }
+        } catch (Exception ex) {
+            logger.severe("Error fetching from rel=" + rel + " : " + ex.getMessage());
+            alreadyFailedNames.add(rel.toLowerCase());
+            return null;
+        }
+    }
+
+
+    /**
+     * Zapisuje solarBodyDetails w bazie, o ile nie jest null.
+     * Zwraca zapisany obiekt lub null, jeśli nie ma żadnych danych.
+     */
+    private SolarBodies saveIfNotNull(String nameAttempt, SolarBodies solarBodyDetails) {
+        if (solarBodyDetails == null) {
+            logger.warning("Could not find data for: " + nameAttempt
+                    + " even from external API => returning null.");
+            return null;
+        }
+        // Inicjalizacja księżyców + zliczenie
         if (solarBodyDetails.getMoons() == null) {
             solarBodyDetails.setMoons(new HashSet<>());
         }
         solarBodyDetails.setMoonCount(solarBodyDetails.getMoons().size());
+
         SolarBodies saved = solarBodiesRepository.save(solarBodyDetails);
-        logger.info("Saved " + englishName + " from API.");
+        logger.info("Saved " + nameAttempt + " from API (englishName="
+                + solarBodyDetails.getEnglishName() + ")");
         return saved;
     }
+    private String stringToHex(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            sb.append("\\x")
+                    .append(Integer.toHexString((int) c));
+        }
+        return sb.toString();
+    }
+
 
 }

@@ -241,10 +241,23 @@ export function initializePlanetScene(containerElement, initPlanetData) {
 
 
     // Dodaj pierścienie, jeśli są zdefiniowane
-    if (planetData.rings) {
-        const ringsMesh = createPlanetRings(planetData.rings);
-        planetGroup.add(ringsMesh);
-        occlusionObjects.push(ringsMesh);
+    if (planetData.rings && planetData.rings.length > 0) {
+        planetData.rings.forEach(ringDef => {
+            const planetRadius = planetData.radius; // w jednostkach Three.js
+            const innerRadius = ringDef.innerRadiusFactor * planetRadius;
+            const outerRadius = ringDef.outerRadiusFactor * planetRadius;
+            const ringMesh = createPlanetRings({
+                name: ringDef.name,
+                innerRadius,
+                outerRadius,
+                thickness: ringDef.thickness,
+                opacity: ringDef.opacity,
+                texturePath: ringDef.texturePath,
+                // ewentualnie inne parametry
+            });
+            planetGroup.add(ringMesh);
+            occlusionObjects.push(ringMesh);
+        });
     }
 
     // Księżyce

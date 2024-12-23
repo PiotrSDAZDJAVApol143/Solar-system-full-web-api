@@ -43,22 +43,31 @@ public class HttpClientService<T> {
                 logger.info("API Response: " + bodyAsString);
 
                 if (response.statusCode() == 301 || response.statusCode() == 302) {
-                    currentUrl = response.headers().firstValue("Location").orElse(null);
-                    if (currentUrl == null) {
-                        throw new RuntimeException("Redirect location is missing");
-                    }
+                    // ...
                 } else if (response.statusCode() == 200) {
+
+                    // **DORZUĆ** logowanie:
+                    logger.info(
+                            "getPlanetDetails(): code=200, length(body)="
+                                    + (bodyAsString != null ? bodyAsString.length() : "null")
+                    );
+
+                    // **SPRAWDŹ**, czy ciało nie jest puste:
+                    if (bodyAsString == null || bodyAsString.isBlank()) {
+                        logger.warning("Body is null/blank from " + currentUrl + ", returning null...");
+                        return null;
+                    }
+
                     final Gson gson = new GsonBuilder().registerTypeAdapter(
                             LocalDateTime.class,
-                            new JsonDeserializer<LocalDateTime>() {
-                                @Override
-                                public LocalDateTime deserialize(JsonElement json, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-                                    var dateTimeJson = json.getAsJsonPrimitive().getAsLong();
-                                    return LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTimeJson), ZoneId.systemDefault());
-                                }
+                            (JsonDeserializer<LocalDateTime>) (json, type, context) -> {
+                                var dateTimeJson = json.getAsJsonPrimitive().getAsLong();
+                                return LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTimeJson), ZoneId.systemDefault());
                             }
                     ).create();
+
                     return gson.fromJson(bodyAsString, responseClass);
+
                 } else if (response.statusCode() == 404) {
                     logger.warning("Resource not found: " + currentUrl);
                     return null;

@@ -14,6 +14,10 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import './AnimatedRoutes.css';
 import Sun from "../../pages/Library/Sun/Sun";
 import Mars from "../../pages/Library/Planets/Mars/Mars";
+import Jupiter from "../../pages/Library/Planets/Jupiter/Jupiter";
+import Saturn from "../../pages/Library/Planets/Saturn/Saturn";
+import Uranus from "../../pages/Library/Planets/Uranus/Uranus";
+import Neptune from "../../pages/Library/Planets/Neptune/Neptune";
 
 function AnimatedRoutes() {
     const location = useLocation();
@@ -44,6 +48,10 @@ function AnimatedRoutes() {
                         <Route path="/venus" element={<Venus/>}/>
                         <Route path="/earth" element={<Earth/>}/>
                         <Route path="/mars" element={<Mars/>}/>
+                        <Route path="/jupiter" element={<Jupiter/>}/>
+                        <Route path="/saturn" element={<Saturn/>}/>
+                        <Route path="/uranus" element={<Uranus/>}/>
+                        <Route path="/neptune" element={<Neptune/>}/>
                         <Route path="/fun-facts" element={<FunFacts/>}/>
                         <Route path="/solar-system" element={<SolarSystem/>}/>
                         <Route path="/contact" element={<Contact/>}/>

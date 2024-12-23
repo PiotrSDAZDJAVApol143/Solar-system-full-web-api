@@ -1,56 +1,54 @@
 //src/utils/createPlanetRings.js
+
 import * as THREE from 'three';
 
-export function createPlanetRings(params) {
-    const {
-        innerRadius,
-        outerRadius,
-        texturePath,
-        opacity,
-    } = params;
+export function createPlanetRings({
+                                      name,
+                                      innerRadius,
+                                      outerRadius,
+                                      thickness = 0.05,
+                                      opacity = 0.8,
+                                      texturePath,
+                                      side = THREE.DoubleSide,
+                                      metalness = 0.2,
+                                      roughness = 0.8,
+                                      transmission = 0.2,
+                                      clearcoat = 0.0,
+                                  }) {
+    // Geometria
+    const ringGeometry = new THREE.CylinderGeometry(
+        outerRadius,  // top radius
+        innerRadius,  // bottom radius
+        thickness,    // height
+        128,          // radial segments
+        1,            // height segments
+        true          // openEnded
+    );
 
-    // Tworzenie geometrii pierścienia jako cienkiego cylindra
-    const ringThickness = 0.05; // Grubość pierścienia (można dostosować)
-    const ringGeometry = new THREE.CylinderGeometry(innerRadius, outerRadius, ringThickness, 128, 1, true);
-
-    // Ładowanie tekstury pierścienia
+    // Tekstura
     const ringTexture = new THREE.TextureLoader().load(texturePath);
     ringTexture.wrapS = THREE.RepeatWrapping;
     ringTexture.wrapT = THREE.RepeatWrapping;
 
-    // Tworzenie materiału pierścienia
-// const ringMaterial = new THREE.MeshBasicMaterial({
-//     map: ringTexture,
-//     side: THREE.DoubleSide,
-//     transparent: true,
-//     opacity: opacity,
-// });
-
-//const ringMaterial = new THREE.MeshStandardMaterial({
-//  map: ringTexture,
-//  side: THREE.DoubleSide,
-//  transparent: true,
-//  opacity: opacity,
-//  metalness: 0.3, // Kontroluje metaliczność
-//  roughness: 0.8, // Kontroluje chropowatość
-//});
-
+    // Materiał (MeshPhysicalMaterial jako przykład)
     const ringMaterial = new THREE.MeshPhysicalMaterial({
         map: ringTexture,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: opacity,
-        metalness: 0.2,
-        roughness: 0.8,
-        transmission: 0.6,  // Przezroczystość
-        thickness: 0.1,     // Grubość dla efektu przezroczystości
-        clearcoat: 0.3,     // Powłoka dla dodatkowego połysku
-        clearcoatRoughness: 0.5,
-    })
+        side,
+        transparent: false,
+        opacity,
+        metalness,
+        roughness,
+        transmission,   // "przezroczystość"
+        clearcoat,
+        // ...
+    });
 
-// Tworzenie mesha pierścienia
     const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
-    ringMesh.name = 'PlanetRing';
+    ringMesh.name = name || 'PlanetRing';
     ringMesh.receiveShadow = true;
+
+    // Najczęściej pierścienie są "płaskie" w płaszczyźnie równika planety:
+    // => ringMesh.rotation.x = Math.PI / 2;  // ewentualnie inna oś
+
     return ringMesh;
 }

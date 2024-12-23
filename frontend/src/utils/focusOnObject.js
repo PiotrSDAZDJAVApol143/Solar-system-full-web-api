@@ -38,13 +38,13 @@ export function focusOnObject(object, camera, controls, state) {
         // Dla obiektów o średnicy większej niż 0.5
         cameraMinDistance = diameter * 1.2;
         controlsMinDistance = cameraMinDistance *0.5;
-        controlsMaxDistance = cameraMinDistance * 30;
+        controlsMaxDistance = cameraMinDistance * 60;
     } else {
         console.log("obiekt mały")
         // Dla obiektów o średnicy mniejszej lub równej 0.5
         cameraMinDistance = diameter * 1.2;
-        controlsMinDistance = cameraMinDistance * 6;
-        controlsMaxDistance = cameraMinDistance * 30;
+        controlsMinDistance = cameraMinDistance * 5;
+        controlsMaxDistance = cameraMinDistance * 60;
     }
 
 
