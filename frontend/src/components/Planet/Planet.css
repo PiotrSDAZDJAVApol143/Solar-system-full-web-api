@@ -29,6 +29,88 @@
     margin-left: 20px;
     margin-bottom: 10px;
 }
+.moons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.planet-info li a {
+    text-decoration: none;
+    color: #58a6ff;
+    transition: color 0.3s;
+}
+.planet-info ul {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* kolumny */
+    grid-gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.planet-info li a:hover {
+    color: #1f78d1;
+}
+.moons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.moons-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 kolumny */
+    grid-template-rows: repeat(6, auto); /* 6 wierszy */
+    gap: 10px;
+}
+
+.carousel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: 15px;
+}
+
+.carousel-item {
+    display: grid;
+    grid-gap: 10px;
+    list-style: none;
+    padding: 10px;
+    margin: 0;
+}
+
+.carousel-item.active {
+    display: block;
+}
+
+.carousel-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.carousel-page-btn {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.carousel-page-btn:hover,
+.carousel-page-btn.active {
+    background-color: #58a6ff;
+    color: #fff;
+}
 .label {
     color: rgba(131, 125, 125, 0.742);
     font-family: Arial, sans-serif;

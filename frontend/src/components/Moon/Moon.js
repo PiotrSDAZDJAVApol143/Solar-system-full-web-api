@@ -25,7 +25,6 @@ export class Moon {
         this.radius = params.radius;
         this.meanRadiusKm = params.meanRadiusKm;
 
-        // W praktyce "surfaceTexture" z JSON może trafić w param "texturePath".
         this.texturePath = params.texturePath || null;
         this.bumpMapPath = params.bumpMapPath || null;
         this.normalMapPath = params.normalMapPath || null;
@@ -61,7 +60,6 @@ export class Moon {
         this.scaleFactor = params.scaleFactor || 1;
         this.parentPlanetName = params.parentPlanetName || "Nieznana";
 
-        // "modelPath" = JSON-owe "model", jeśli w ogóle jest
         this.modelPath = params.modelPath || null;
 
         if (isNaN(this.scaleFactor)) {
@@ -72,24 +70,15 @@ export class Moon {
     }
 
     initMoon() {
-        // Pivot orbity
         this.orbitPivot = new THREE.Object3D();
         this.parentPlanet.add(this.orbitPivot);
         this.orbitPivot.rotation.x = THREE.MathUtils.degToRad(this.orbitTilt);
 
-        // LOGIKA:
-        // 1) Jeśli mamy texturePath != null => generujemy kulę i kończymy.
-        // 2) W przeciwnym razie sprawdzamy, czy jest this.modelPath:
-        //    - jeśli tak -> loadModel -> setupMoonMesh (i fallback w razie błędu -> createPlanet).
-        //    - jeśli nie -> wczytujemy getRandomDefaultModelPath(). Jeśli nie uda się -> fallback do createPlanet.
-
         if (this.texturePath) {
-            // (1) Mamy surfaceTexture => generujemy kulę
             console.log(`[Moon.js] [${this.name}] Ma surfaceTexture -> generuję kulę z createPlanet()`);
             const sphereMesh = this.createPlanetMesh();
             this.setupMoonMesh(sphereMesh);
         } else {
-            // (2) Brak tekstury => sprawdzamy model
             if (this.modelPath) {
                 console.log(`[Moon.js] [${this.name}] Brak tekstury, ale mamy modelPath="${this.modelPath}" -> loadModel`);
                 this.loadModel(this.modelPath).then(modelMesh => {
@@ -97,12 +86,10 @@ export class Moon {
                 }).catch(err => {
                     console.error(`[Moon.js] [${this.name}] Błąd wczytywania modelu z ${this.modelPath}:`, err);
                     console.log(`[Moon.js] [${this.name}] -> fallback: createPlanet (kula)`);
-                    // fallback -> createPlanet
                     const sphereMesh = this.createPlanetMesh();
                     this.setupMoonMesh(sphereMesh);
                 });
             } else {
-                // modelPath też null => losowy default
                 console.log(`[Moon.js] [${this.name}] Brak tekstury i modelPath. -> wczytuję losowy default.`);
                 const randomDefault = getRandomDefaultModelPath();
                 this.loadModel(randomDefault).then(randomMesh => {
@@ -110,7 +97,6 @@ export class Moon {
                 }).catch(err => {
                     console.error(`[Moon.js] [${this.name}] Błąd wczytywania losowego modelu:`, err);
                     console.log(`[Moon.js] [${this.name}] -> fallback: createPlanet (kula)`);
-                    // fallback -> createPlanet
                     const sphereMesh = this.createPlanetMesh();
                     this.setupMoonMesh(sphereMesh);
                 });
@@ -122,7 +108,7 @@ export class Moon {
         return createPlanet(
             this.radius,
             this.texturePath,
-            5, // Domyślna wartość shininess
+            5,
             this.normalMapPath,
             this.bumpMapPath,
             this.aoMapPath,
@@ -140,7 +126,6 @@ export class Moon {
 
         this.setMeshProperties();
 
-        // userData
         this.mesh.userData = {
             bodyType: "Moon",
             name: this.name,
@@ -157,16 +142,13 @@ export class Moon {
             parentPlanetName: this.parentPlanetName,
         };
 
-        // occlusion
         this.occlusionObjects.push(this.mesh);
 
-        // Etykieta
         this.label = createLabel(this.name);
         this.mesh.add(this.label);
         this.label.userData.shouldShow = this.guiParams.showObjectNames;
         this.label.visible = this.guiParams.showObjectNames;
 
-        // Ogon orbity
         const maxPoints = Math.round(0.95 * this.orbitDuration * 1440);
         this.orbitTail = new OrbitTail(this.mesh, this.scene, maxPoints, {
             color: 0xcccccc,
@@ -177,7 +159,6 @@ export class Moon {
         }
         this.orbitTails.push(this.orbitTail);
 
-        // Kliknięcie w etykietę
         this.label.element.addEventListener('click', (event) => {
             event.stopPropagation();
             focusOnObject(this.mesh, this.camera, this.controls, this.state, this.scaleFactor);
@@ -192,15 +173,14 @@ export class Moon {
                 const loader = new GLTFLoader();
                 loader.load(path, (gltf) => {
                     const model = gltf.scene.clone(true);
-                    // Skalowanie modelu
                     const finalScale = this.radius;
                     console.log(`[Moon.js] [${this.name}] Wczytano model .glb => skala = ${finalScale}`);
                     model.scale.set(finalScale, finalScale, finalScale);
 
                     model.traverse((child) => {
                         if (child.isMesh) {
-                            child.castShadow = true;  // Generowanie cieni
-                            child.receiveShadow = true;  // Odbieranie cieni
+                            child.castShadow = true;
+                            child.receiveShadow = true;
                         }
                     });
 
@@ -213,9 +193,8 @@ export class Moon {
                 loader.load(path, (geometry) => {
                     const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
                     const mesh = new THREE.Mesh(geometry, material);
-                    // Tutaj także radius * scaleFactor
                     const finalScale = this.radius;
-                    console.log(`[Moon.js] [${this.name}] Wczytano model .glb => skala = ${finalScale}`);
+                    console.log(`[Moon.js] [${this.name}] Wczytano model .ply => skala = ${finalScale}`);
                     mesh.scale.set(finalScale, finalScale, finalScale);
                     resolve(mesh);
                 }, undefined, (error) => {
@@ -241,7 +220,6 @@ export class Moon {
     update(cosmicDelta) {
         if (!this.mesh) return;
 
-        // rotacja
         if (this.rotationDuration > 0) {
             const rotationPeriodSeconds = this.rotationDuration * 3600;
             const rotationSpeed = (2 * Math.PI) / rotationPeriodSeconds;
@@ -249,7 +227,6 @@ export class Moon {
             this.mesh.rotation.y += rotationSpeed * cosmicDelta * directionFactor;
         }
 
-        // obrót wokół planety
         if (this.orbitPivot && this.orbitDuration > 0) {
             const orbitalPeriodSeconds = this.orbitDuration * 86400;
             const orbitSpeed = (2 * Math.PI) / orbitalPeriodSeconds;
@@ -257,7 +234,6 @@ export class Moon {
             this.orbitPivot.rotation.y += orbitSpeed * cosmicDelta * orbitDirection;
         }
 
-        // widoczność etykiety
         this.label.userData.shouldShow = this.guiParams.showObjectNames;
         updateLabelVisibility(
             this.label,
@@ -267,7 +243,6 @@ export class Moon {
             this.occlusionObjects
         );
 
-        // ogon orbity
         if (this.guiParams.showOrbitTails) {
             this.orbitTail.show();
             this.orbitTail.update();

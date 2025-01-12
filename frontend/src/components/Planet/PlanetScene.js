@@ -1,7 +1,7 @@
 // src/components/Planet/PlanetScene.js
 import * as THREE from 'three';
 import { createSceneCameraAndRenderer } from '../../utils/createSceneCameraAndRenderer';
-import {createPlanet, loader} from '../../utils/createPlanet';
+import { createPlanet, loader } from '../../utils/createPlanet';
 import { addSunAndLight } from '../../utils/addSunAndLight';
 import { createSpaceHorizon } from '../../utils/createSpaceHorizon';
 import getStarfield from '../../utils/getStarfield';
@@ -58,17 +58,13 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         console.error("Brak elementu kontenera!");
         return;
     }
-    container = containerElement;
-    planetData = initPlanetData;
-    planetData.bodyType = "Planet";
-    if (!planetData) {
+    if (!initPlanetData) {
         console.error("planetData jest null lub undefined");
         return;
     }
-    if (!container) {
-        console.error("Kontener jest null");
-        return;
-    }
+    container = containerElement;
+    planetData = initPlanetData;
+    planetData.bodyType = "Planet";
 
     raycaster = new THREE.Raycaster();
 
@@ -91,7 +87,6 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     initialMinDistance = controls.minDistance;
     initialMaxDistance = controls.maxDistance;
 
-    // Dodanie referencji kamery, kontrolerów i stanu do planetData
     planetData.camera = camera;
     planetData.controls = controls;
     planetData.state = state;
@@ -114,7 +109,6 @@ export function initializePlanetScene(containerElement, initPlanetData) {
     const bumpMapPath = planetData.bumpMapPath ? `/${planetData.bumpMapPath}` : null;
     const aoMapPath = planetData.aoMapPath ? `/${planetData.aoMapPath}` : null;
     const specularMapPath = planetData.specularMapPath ? `/${planetData.specularMapPath}` : null;
-
 
     planetMesh = createPlanet(
         planetData.radius,
@@ -148,13 +142,13 @@ export function initializePlanetScene(containerElement, initPlanetData) {
 
         let cloudsMaterial;
         if (planetData.name === 'Earth') {
-           cloudsMaterial = new THREE.MeshStandardMaterial({
+            cloudsMaterial = new THREE.MeshStandardMaterial({
                 map: cloudsTexture,
-               alphaMap: textureLoader.load('/assets/textures/earth/earth_cloud_Alpha.png'),
+                alphaMap: textureLoader.load('/assets/textures/earth/earth_cloud_Alpha.png'),
                 transparent: true,
-               depthWrite: false,
+                depthWrite: false,
                 opacity: planetData.cloudOpacity,
-               roughness: 0.8,
+                roughness: 0.8,
                 blending: THREE.NormalBlending,
             });
 
@@ -173,9 +167,8 @@ export function initializePlanetScene(containerElement, initPlanetData) {
         planetGroup.add(cloudsMesh);
         planetMesh.cloudsMesh = cloudsMesh;
     }
-
     if (planetData.additionalTexture) {
-        const additionalTexturePath = `/${planetData.additionalTexture}`;
+        const additionalTexturePath = '/${planetData.additionalTexture}';
         const additionalMap = loader.load(additionalTexturePath);
         additionalMap.colorSpace = THREE.SRGBColorSpace;
 
@@ -286,7 +279,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
 
                 guiParams: guiParams,
                 orbitDuration: moonData.orbitalPeriod || 100,
-                rotationDuration: moonData.rotationPeriod || 100,
+                rotationDuration: rotationDuration,
                 mass: moonData.mass,
                 gravity: moonData.gravity,
                 avgTemp: moonData.avgTemp,
@@ -304,7 +297,7 @@ export function initializePlanetScene(containerElement, initPlanetData) {
 
                 modelPath: moonData.model || null,
                 scale: 1 * scaleFactor
-            };
+        };
 
             const moon = new Moon(moonParams);
             moons.push(moon);
@@ -448,9 +441,9 @@ function animate() {
         additionalTextureMesh.material.uniforms.lightDirection.value.copy(directionToSun);
     }
 
- //   // Aktualizacja księżyców
+    //   // Aktualizacja księżyców
     moons.forEach(moon => {
-       moon.update(cosmicDelta);
+        moon.update(cosmicDelta);
     });
 
     // Śledzenie obiektu, jeśli jest ustawione focusOnObject
@@ -553,6 +546,7 @@ export function updatePlanetInfo(targetObject) {
 
     if (isPlanet) {
         const planetData = data;
+        const moonsContent = renderMoonsList(planetData.moons);
         infoHTML = `
             <h2>Informacje o ${planetData.name || 'Brak danych'}</h2>
             <p><u>${planetData.description || 'Brak opisu'}</u></p>
@@ -564,24 +558,9 @@ export function updatePlanetInfo(targetObject) {
             planetData.avgTemp ? `${planetData.avgTemp}°C / ${(parseFloat(planetData.avgTemp) + 273.15).toFixed(2)}°K` : "Brak danych"
         }</p>
             <p>Masa: ${planetData.mass || "Brak danych"}</p>
-          
-            <p>Rok trwa: ${planetData.orbitalPeriod || "Brak danych"} dni</p>
-            <p>
-                                    Doba
-                                    trwa: ${Math.abs(planetData.rotationPeriod).toLocaleString('pl-PL', {maximumFractionDigits: 2})} godzin
-                                    /
-                                    (${Math.abs(planetData.rotationPeriod / 24).toLocaleString('pl-PL', {maximumFractionDigits: 2})} dni)</p>
             <p>Liczba księżyców: ${planetData.moons?.length || 0}</p>
             <p>Księżyce:</p>
-            <ul>
-                ${
-            planetData.moons?.length
-                ? planetData.moons.map(moon =>
-                    `<li><a href="#" data-targetname="${moon.englishName}">${moon.englishName}</a></li>`
-                ).join('')
-                : "Brak księżyców"
-        }
-            </ul>
+            <div id="moons-list">${moonsContent}</div>
         `;
     } else if (isMoon) {
         const moonData = data;
@@ -599,7 +578,7 @@ export function updatePlanetInfo(targetObject) {
             <p>Grawitacja: ${moonData.gravity?.toFixed(2) || "Brak danych"} m/s²</p>
             <p>Średnia temperatura: ${
             moonData.avgTemp !== null && moonData.avgTemp !== undefined
-                ? ` ${(moonData.avgTemp - 273.15).toFixed(2)}°C /${moonData.avgTemp.toFixed(2)}°K`
+                ? `${(moonData.avgTemp - 273.15).toFixed(2)}°C /${moonData.avgTemp.toFixed(2)}°K`
                 : "Brak danych"
         }</p>
             <p>Masa: ${moonData.mass ? `${(moonData.mass * 100).toFixed(2)} % masy Ziemi` : "Brak danych"}</p>
@@ -612,7 +591,6 @@ export function updatePlanetInfo(targetObject) {
 
     planetInfoDiv.innerHTML = infoHTML;
 
-    // Teraz, po wstawieniu HTML, znajdź wszystkie linki z data-targetname i dodaj im event listener
     const links = planetInfoDiv.querySelectorAll('a[data-targetname]');
     links.forEach(link => {
         link.addEventListener('click', (e) => {
@@ -622,29 +600,59 @@ export function updatePlanetInfo(targetObject) {
         });
     });
 }
+function renderMoonsList(moons) {
+    if (!moons || moons.length === 0) {
+        return '<p>Brak księżyców</p>';
+    }
+
+    return `
+        <div class="moons-grid">
+            ${moons
+        .map(
+            (moon) => `
+                        <div class="moon-item">
+                            <a href="#" data-name="${moon.name}">${moon.name}</a>
+                        </div>`
+        )
+        .join('')}
+        </div>
+    `;
+}
+// Prosta funkcja do zmiany stron
+function scrollToPage(index) {
+    const carousel = document.querySelector(".carousel");
+    if (!carousel) return;
+
+    // Deaktywujemy/aktywujemy itemy
+    const items = carousel.querySelectorAll(".carousel-item");
+    items.forEach((item, i) => {
+        item.classList.toggle("active", i === index);
+    });
+
+    // Zmieniamy klasę .active w przyciskach
+    const btns = document.querySelectorAll(".carousel-page-btn");
+    btns.forEach((btn, i) => {
+        btn.classList.toggle("active", i === index);
+    });
+}
 
 export function focusOnObjectFromList(objectName) {
-    const moon = moons.find((m) => m.name === objectName);
+    const moon = moons.find(m => m.name === objectName);
 
-    // Jeśli trwa animacja, pomijamy
     if (state.isTweening) {
         console.log("Animacja w toku, pomijam nowe żądanie śledzenia.");
         return;
     }
     if (moon) {
-        // Sprawdzamy czy to ten sam obiekt i już go śledzimy
         if (state.currentTargetObject === moon.mesh && state.isFollowingObject) {
             return;
         }
-        console.log("Przełączanie na księżyc");
         focusOnObject(moon.mesh, camera, controls, state);
         updatePlanetInfo(moon.mesh);
     } else if (objectName === planetData.name) {
-        // Sprawdzamy czy to ten sam obiekt i już go śledzimy
         if (state.currentTargetObject === planetMesh && state.isFollowingObject) {
             return;
         }
-        console.log("Przełączanie na planetę:");
         focusOnObject(planetMesh, camera, controls, state);
         updatePlanetInfo(planetMesh);
     } else {
@@ -662,7 +670,6 @@ function stopFollowing(state, camera, controls, initialCameraPosition, initialCo
     controls.enableZoom = true;
     controls.enablePan = true;
 
-    // Przywracamy pozycję kamery i target jeśli to potrzebne:
     controls.target.copy(initialControlsTarget);
     camera.position.copy(initialCameraPosition);
     controls.update();

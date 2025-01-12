@@ -60,8 +60,8 @@ public class SolarBodiesController {
         SolarBodyDTO dto = solarBodiesService.convertToDTOWithFullMoons(solarBody);
         return ResponseEntity.ok(dto);
 
-       // SolarBodyDTO dto = SolarBodyMapper.convertToDTO(solarBody);
-       // return ResponseEntity.ok(dto);
+        // SolarBodyDTO dto = SolarBodyMapper.convertToDTO(solarBody);
+        // return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/{englishName}/moons")
