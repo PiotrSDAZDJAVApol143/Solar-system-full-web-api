@@ -1,27 +1,34 @@
 // src/components/Planet/Planet.js
 import  React, { useEffect, useRef } from 'react';
-import { initializePlanetScene, disposePlanetScene } from './PlanetScene';
+import {
+    initializePlanetScene,
+    updatePlanetScene,
+    disposePlanetScene
+} from './PlanetScene';
 import './Planet.css';
 
 function Planet({ planetData }) {
     const containerRef = useRef(null);
 
     useEffect(() => {
-        if (!planetData) return;
-        if (!containerRef.current) {
-            console.warn('Brak kontenera, jeszcze nie wyrenderowany');
-            return;
+        if (!containerRef.current) return;
+        // Najpierw usuwamy ewentualne pozostałości starej sceny
+        disposePlanetScene();
+
+        // Tworzymy nową scenę
+        initializePlanetScene(containerRef.current);
+
+        if (planetData) {
+            updatePlanetScene(planetData);
         }
 
-        initializePlanetScene(containerRef.current, planetData);
-
         return () => {
+            // Gdy wychodzimy z tego komponentu:
             disposePlanetScene();
         };
     }, [planetData]);
 
-    return <div ref={containerRef} style={{ height: '100%' }}></div>;
-
+    return <div ref={containerRef} style={{ height: '100%' }} />;
 }
 
 export default Planet;

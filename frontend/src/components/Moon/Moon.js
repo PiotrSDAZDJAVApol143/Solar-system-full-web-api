@@ -15,7 +15,7 @@ import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 function getRandomDefaultModelPath() {
     const randomIndex = Math.floor(Math.random() * 5) + 1; // 1..5
     const path = `/assets/models/3D_models/default${randomIndex}.ply`;
-    console.log(`[Moon.js] Wylosowano model domyślny: "${path}"`);
+  //  console.log(`[Moon.js] Wylosowano model domyślny: "${path}"`);
     return path;
 }
 
@@ -75,28 +75,28 @@ export class Moon {
         this.orbitPivot.rotation.x = THREE.MathUtils.degToRad(this.orbitTilt);
 
         if (this.texturePath) {
-            console.log(`[Moon.js] [${this.name}] Ma surfaceTexture -> generuję kulę z createPlanet()`);
+         //   console.log(`[Moon.js] [${this.name}] Ma surfaceTexture -> generuję kulę z createPlanet()`);
             const sphereMesh = this.createPlanetMesh();
             this.setupMoonMesh(sphereMesh);
         } else {
             if (this.modelPath) {
-                console.log(`[Moon.js] [${this.name}] Brak tekstury, ale mamy modelPath="${this.modelPath}" -> loadModel`);
+              //  console.log(`[Moon.js] [${this.name}] Brak tekstury, ale mamy modelPath="${this.modelPath}" -> loadModel`);
                 this.loadModel(this.modelPath).then(modelMesh => {
                     this.setupMoonMesh(modelMesh);
                 }).catch(err => {
                     console.error(`[Moon.js] [${this.name}] Błąd wczytywania modelu z ${this.modelPath}:`, err);
-                    console.log(`[Moon.js] [${this.name}] -> fallback: createPlanet (kula)`);
+                //    console.log(`[Moon.js] [${this.name}] -> fallback: createPlanet (kula)`);
                     const sphereMesh = this.createPlanetMesh();
                     this.setupMoonMesh(sphereMesh);
                 });
             } else {
-                console.log(`[Moon.js] [${this.name}] Brak tekstury i modelPath. -> wczytuję losowy default.`);
+             //   console.log(`[Moon.js] [${this.name}] Brak tekstury i modelPath. -> wczytuję losowy default.`);
                 const randomDefault = getRandomDefaultModelPath();
                 this.loadModel(randomDefault).then(randomMesh => {
                     this.setupMoonMesh(randomMesh);
                 }).catch(err => {
                     console.error(`[Moon.js] [${this.name}] Błąd wczytywania losowego modelu:`, err);
-                    console.log(`[Moon.js] [${this.name}] -> fallback: createPlanet (kula)`);
+                 //   console.log(`[Moon.js] [${this.name}] -> fallback: createPlanet (kula)`);
                     const sphereMesh = this.createPlanetMesh();
                     this.setupMoonMesh(sphereMesh);
                 });
@@ -174,7 +174,7 @@ export class Moon {
                 loader.load(path, (gltf) => {
                     const model = gltf.scene.clone(true);
                     const finalScale = this.radius;
-                    console.log(`[Moon.js] [${this.name}] Wczytano model .glb => skala = ${finalScale}`);
+                  //  console.log(`[Moon.js] [${this.name}] Wczytano model .glb => skala = ${finalScale}`);
                     model.scale.set(finalScale, finalScale, finalScale);
 
                     model.traverse((child) => {
@@ -194,7 +194,7 @@ export class Moon {
                     const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
                     const mesh = new THREE.Mesh(geometry, material);
                     const finalScale = this.radius;
-                    console.log(`[Moon.js] [${this.name}] Wczytano model .ply => skala = ${finalScale}`);
+                  //  console.log(`[Moon.js] [${this.name}] Wczytano model .ply => skala = ${finalScale}`);
                     mesh.scale.set(finalScale, finalScale, finalScale);
                     resolve(mesh);
                 }, undefined, (error) => {

@@ -11,13 +11,13 @@ export function focusOnObject(object, camera, controls, state) {
 
     // Jeśli już trwa animacja, zignoruj żądanie
     if (state.isTweening) {
-        console.log("Animacja w toku, pomijam nowe żądanie śledzenia.");
+    //    console.log("Animacja w toku, pomijam nowe żądanie śledzenia.");
         return;
     }
 
     // Jeśli już śledzimy ten sam obiekt, zignoruj żądanie
     if (state.currentTargetObject === object && state.isFollowingObject) {
-        console.log("Już śledzimy ten obiekt, pomijam nowe żądanie.");
+     //   console.log("Już śledzimy ten obiekt, pomijam nowe żądanie.");
         return;
     }
 
@@ -34,22 +34,22 @@ export function focusOnObject(object, camera, controls, state) {
     let controlsMaxDistance;
 
     if (diameter > 0.5) {
-        console.log("obiekt średni")
+     //   console.log("obiekt średni")
         // Dla obiektów o średnicy większej niż 0.5
         cameraMinDistance = diameter * 1.2;
-        controlsMinDistance = cameraMinDistance *0.5;
-        controlsMaxDistance = cameraMinDistance * 60;
+        controlsMinDistance = cameraMinDistance * 0.5;
+        controlsMaxDistance = cameraMinDistance * 100;
     } else {
-        console.log("obiekt mały")
+    //    console.log("obiekt mały")
         // Dla obiektów o średnicy mniejszej lub równej 0.5
-        cameraMinDistance = diameter * 1.2;
-        controlsMinDistance = cameraMinDistance * 5;
-        controlsMaxDistance = cameraMinDistance * 60;
+        cameraMinDistance = diameter * 1.3;
+        controlsMinDistance = cameraMinDistance * 6;
+        controlsMaxDistance = cameraMinDistance * 100;
     }
 
 
     console.log("Promień obiektu:", radius);
-    console.log("obiekt mały/średni zdefiniowany przez Ciebie");
+   console.log("obiekt mały/średni zdefiniowany przez Ciebie");
     console.log("Minimalna odległość kamery:", cameraMinDistance);
 
     controls.minDistance = controlsMinDistance;
@@ -59,11 +59,14 @@ export function focusOnObject(object, camera, controls, state) {
     controls.enablePan = false;
 
     state.isTweening = true;
+    console.log("focusOnObject -> start camera pos:", camera.position);
+    console.log("focusOnObject -> docelowy obiekt:", object.name, "radius=", radius);
+    console.log("focusOnObject -> cameraMinDistance=", cameraMinDistance);
 
     const newTargetPosition = new THREE.Vector3();
     object.getWorldPosition(newTargetPosition);
     // Przygotowanie faz animacji
-    const totalDuration = 4; // 3 sekundy
+    const totalDuration = 4; // 4 sekundy
     const phase1Time = totalDuration * 0.2; // 20%
     const phase2Time = totalDuration * 0.2; // 20%
     const phase3Time = totalDuration * 0.6; // 60%
@@ -110,7 +113,7 @@ export function focusOnObject(object, camera, controls, state) {
     // Tworzymy timeline GSAP
     const tl = gsap.timeline({
         onComplete: () => {
-            console.log("Animacja zakończona.");
+         //   console.log("Animacja zakończona.");
             state.isTweening = false;
             controls.target.copy(newTargetPosition);
             controls.update();

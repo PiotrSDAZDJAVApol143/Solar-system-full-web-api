@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Star from '../../../components/Star/Star';
 import '../../../components/Planet/Planet.css';
 import axios from 'axios';
-import {getScaleFactor} from "../../../config";
+import {getScaleFactor} from "../../../config/config";
 function Sun(){
     const [planetData, setPlanetData] = useState(null);
     useEffect(() => {
