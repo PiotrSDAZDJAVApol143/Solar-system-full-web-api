@@ -50,7 +50,8 @@ function PlanetInfoPage({ planetName, apiUrl }) {
                         inclination: m.inclination || 0,
                         axialTilt: m.axialTilt || 0,
                         escapeSpeed: m.escapeSpeed || 0,
-                    }));
+                    }))
+                .sort((a, b) => a.distance - b.distance);
                 }
 
                 setPlanetData({
@@ -119,13 +120,14 @@ function PlanetInfoPage({ planetName, apiUrl }) {
                     <p>Średnia odległość od Słońca: {Math.abs(planetData.semiMajorAxis)?.toLocaleString('pl-PL')} km</p>
                     <p>Masa: {planetData.mass}% masy Ziemi</p>
                     <p>Objętość: {planetData.vol}% objętości Ziemi</p>
-                    <p>Rok trwa: {Math.abs(planetData.orbitalPeriod).toLocaleString('pl-PL', { maximumFractionDigits: 1 })} dni ziemskich / ({Math.abs(planetData.orbitalPeriod / 365).toLocaleString('pl-PL', {maximumFractionDigits: 2})} lat ziemskich)  </p>
-                    <p>Doba trwa: {Math.abs(planetData.rotationPeriod).toLocaleString('pl-PL', {maximumFractionDigits: 2})} godzin
-                        ziemskich / ({formatHoursToTime(planetData.rotationPeriod)})</p>
+                    <p>Rok trwa: {(formatDaysToTime(planetData.orbitalPeriod))} </p>
+                    <p>Pochylenie osi
+                        obrotu: {planetData.axialTilt?.toLocaleString('pl-PL', {maximumFractionDigits: 2})}°</p>
+                    <p>Doba
+                        trwa: {planetData.rotationPeriod ? formatHoursToTime(Math.abs(planetData.rotationPeriod)) : 'brak danych'}</p>
                     <p>Grawitacja: {planetData.gravity} m/s²</p>
                     <p>Średnia Temperatura: {planetData.avgTemp}°C</p>
-                    <p>Liczba księżyców: {planetData.moonCount}</p>
-                    <p>Księżyce:</p>
+                    <p>Księżyce ({planetData.moonCount}) :</p>
                     <ul>
                         {planetData.moons.map((moon, index) => (
                             <li key={index}>

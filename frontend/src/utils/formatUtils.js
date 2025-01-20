@@ -1,12 +1,15 @@
 // src/utils/formatUtils.js
 
 /**
- * Funkcja do formatowania godzin na dni, godziny, minuty, sekundy
- * @param {number} hours - liczba godzin (np. 24.6229 godziny dla Marsa)
- * @returns {string} sformatowany czas w dniach, godzinach, minutach i sekundach
+ * Funkcja do formatowania godzin na dni, godziny, minuty
+ * @param {number} hours - liczba godzin (np. 1.25 godziny)
+ * @returns {string} sformatowany czas w dniach, godzinach i minutach
  */
 export function formatHoursToTime(hours) {
-    if (hours < 24) {
+    const hoursInDay = 24;
+
+    if (hours < hoursInDay) {
+        // Przelicz godziny na minuty i sekundy
         const totalSeconds = Math.round(hours * 3600);
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
@@ -19,34 +22,35 @@ export function formatHoursToTime(hours) {
 
         return result.trim();
     } else {
-        const days = Math.floor(hours / 24);
-        const remainingHours = Math.floor(hours % 24);
-        const minutes = Math.floor((hours % 1) * 60);
-
-        let result = '';
-        if (days > 0) result += `${days} ${days === 1 ? 'dzień' : 'dni'} `;
-        if (remainingHours > 0) result += `${remainingHours} godz. `;
-        if (minutes > 0) result += `${minutes} min `;
-
-        return result.trim();
+        // Zamiana godzin na dni, a następnie przekazanie do formatowania dni
+        return formatDaysToTime(hours / hoursInDay);
     }
 }
 
 /**
- * Funkcja do formatowania dni na dni, godziny, minuty
- * @param {number} days - liczba dni (np. 1.25 dnia)
- * @returns {string} sformatowany czas w dniach, godzinach i minutach
+ * Funkcja do formatowania dni na lata, dni, godziny, minuty
+ * @param {number} days - liczba dni (np. 400 dni)
+ * @returns {string} sformatowany czas w latach, dniach, godzinach i minutach
  */
 export function formatDaysToTime(days) {
-    const totalHours = Math.floor(days * 24);
-    const d = Math.floor(totalHours / 24);
-    const h = totalHours % 24;
-    const m = Math.floor((days * 24 * 60) % 60);
+    const daysInYear = 365;
+    const years = Math.floor(days / daysInYear);
+    const remainingDays = Math.floor(days % daysInYear);
+    const totalHours = Math.floor((days % 1) * 24);
+    const minutes = Math.floor(((days * 24) % 1) * 60);
 
     let result = '';
-    if (d > 0) result += `${d} ${d === 1 ? 'dzień' : 'dni'} `;
-    if (h > 0) result += `${h} godz. `;
-    if (m > 0) result += `${m} min `;
+
+    const getYearLabel = (years) => {
+        if (years === 1) return 'rok';
+        if (years >= 2 && years <= 4) return 'lata';
+        return 'lat';
+    };
+
+    if (years > 0) result += `${years} ${getYearLabel(years)} `;
+    if (remainingDays > 0) result += `${remainingDays} ${remainingDays === 1 ? 'dzień' : 'dni'} `;
+    if (totalHours > 0) result += `${totalHours} godz. `;
+    if (minutes > 0) result += `${minutes} min `;
 
     return result.trim() || 'mniej niż minuta';
 }

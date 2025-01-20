@@ -6,44 +6,54 @@ export function initializeGUI(guiParams, toggleObjectNames, orbitTails, resetCam
 
     const namesFolder = gui.addFolder('Księżyce');
 
-  //  gui.add(guiParams, 'timeScale', { '1x':1, '50x':50, '500x':500, '1000x':1000 })
-  //      .name('Prędkość czasu')
-  //      .onChange((value) => {
-  //          // można dodać console.log, jeśli chcesz
-  //          console.log("Ustawiono timeScale na:", value);
-  //      });
-    const timeFolder = gui.addFolder('Prędkość Czasu');
-    const sliderController = timeFolder.add(guiParams, 'timeScale', 1, 100000, 1000)
-        .name('Time Scale')
+    const timeSpeedOptions = {
+        "1x": 1,
+        "500x": 500,
+        "1000x": 1000,
+        "5000x": 5000,
+        "50000x": 50000,
+        "100000x": 100000
+    };
+
+    gui.add(guiParams, 'timeScale', timeSpeedOptions)
+        .name('Prędkość czasu')
         .onChange(value => {
-            console.log("Nowa prędkość czasu:", value);
+            console.log("Ustawiono prędkość czasu na:", value);
         });
-    requestAnimationFrame(() => {
-        const controllerDom = sliderController.domElement;
-        const sliderInput = controllerDom.querySelector('input[type="range"]');
-        if (sliderInput) {
-            // Utwórz div na legendę
-            const scaleDiv = document.createElement('div');
-            scaleDiv.style.position = 'relative';
-            scaleDiv.style.marginTop = '8px';
-            scaleDiv.style.display = 'flex';
-            scaleDiv.style.justifyContent = 'space-between';
-            scaleDiv.style.fontSize = '12px';
-            scaleDiv.style.color = '#ccc';
 
-            // Nasze kluczowe wartości:
-            const marks = [1,100000];
+    // const timeFolder = gui.addFolder('Prędkość Czasu');
+    // const sliderController = timeFolder.add(guiParams, 'timeScale', 1, 100000, 1000)
+    //     .name('Time Scale')
+    //     .onChange(value => {
+    //         console.log("Nowa prędkość czasu:", value);
+    //     });
 
-            marks.forEach(m => {
-                const mark = document.createElement('span');
-                mark.innerText = `${m}x`;
-                scaleDiv.appendChild(mark);
-            });
+   //requestAnimationFrame(() => {
+   //    const controllerDom = sliderController.domElement;
+   //    const sliderInput = controllerDom.querySelector('input[type="range"]');
+   //    if (sliderInput) {
+   //        // Utwórz div na legendę
+   //        const scaleDiv = document.createElement('div');
+   //        scaleDiv.style.position = 'relative';
+   //        scaleDiv.style.marginTop = '8px';
+   //        scaleDiv.style.display = 'flex';
+   //        scaleDiv.style.justifyContent = 'space-between';
+   //        scaleDiv.style.fontSize = '12px';
+   //        scaleDiv.style.color = '#ccc';
 
-            // Dodajemy scaleDiv za sliderem
-            controllerDom.appendChild(scaleDiv);
-        }
-    });
+   //        // Nasze kluczowe wartości:
+   //        const marks = [1,100000];
+
+   //        marks.forEach(m => {
+   //            const mark = document.createElement('span');
+   //            mark.innerText = `${m}x`;
+   //            scaleDiv.appendChild(mark);
+   //        });
+
+   //        // Dodajemy scaleDiv za sliderem
+   //        controllerDom.appendChild(scaleDiv);
+   //    }
+   //});
 
     // Najpierw stwórz wszystkie checkboxy, potem w onChange możesz z nich korzystać.
     const smallMoonsCheckbox = namesFolder.add(guiParams, 'showSmallMoons')
