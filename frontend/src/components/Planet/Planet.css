@@ -19,6 +19,7 @@
 
 .planet-info {
     background-color: #191b1e9f;
+    max-height: 85vh;
     font-size: 1rem;
     padding: 20px;
     color: #dcdcdc;
@@ -28,7 +29,14 @@
     margin-top:2vh;
     margin-left: 20px;
     margin-bottom: 10px;
+    position: relative;
 }
+
+.planet-info p {
+    margin-bottom: 5px; /* Zmniejszenie odstępów między akapitami */
+    line-height: 1.9; /* Ustawienie wysokości linii dla większej gęstości tekstu */
+}
+
 .moons-container {
     display: flex;
     flex-direction: column;
@@ -57,7 +65,31 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
+}
+.moon-pagination {
+    display: flex; /* Ustawienie paginacji w jednym rzędzie */
+    justify-content: center; /* Wyśrodkowanie paginacji */
+    position: absolute; /* Absolutne pozycjonowanie wewnątrz .planet-info */
+    bottom: 5px; /* Odstęp od dolnej krawędzi */
+    left: 50%; /* Wyśrodkowanie względem kontenera */
+    transform: translateX(-50%); /* Dodatkowe wyrównanie do środka */
+    gap: 5px; /* Odstępy między przyciskami */
+    width: 100%; /* Zapewnienie pełnej szerokości */
+}
+.moon-pagination button {
+    background-color: rgba(255, 255, 255, 0.1);;
+    color: #fff;
+    border: 1px solid #58a6ff;
+    border-radius: 5px;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.moon-pagination button.active {
+    background-color: #58a6ff;
+    color: #fff;
 }
 
 .moons-grid {

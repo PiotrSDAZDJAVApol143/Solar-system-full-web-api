@@ -11,6 +11,8 @@ import {formatDaysToTime, formatHoursToTime} from "../../utils/formatUtils";
 function PlanetInfoPage({ planetName, apiUrl }) {
     const [planetData, setPlanetData] = useState(null);
     const [currentObject, setCurrentObject] = useState('PLANET');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20; // Ilość księżyców na stronę
 
     useEffect(() => {
         const handleStopFollowing = () => {
@@ -43,7 +45,7 @@ function PlanetInfoPage({ planetName, apiUrl }) {
                         distance: m.semimajorAxis,
                         orbitDuration: m.orbitalPeriod,
                         rotationDuration: m.rotationPeriod,
-                        avgTemp: m.avgTemp,
+                        avgTemp: m.avgTemp || 0,
                         discoveredBy: m.discoveredBy || "Nieznany",
                         discoveryDate: m.discoveryDate || "Brak danych",
                         eccentricity: m.eccentricity || 0,
@@ -107,6 +109,15 @@ function PlanetInfoPage({ planetName, apiUrl }) {
     const handleShowPlanet = () => setCurrentObject('PLANET');
     const handleShowMoon = (moonName) => setCurrentObject(moonName);
 
+    const indexOfLastMoon = currentPage * itemsPerPage;
+    const indexOfFirstMoon = indexOfLastMoon - itemsPerPage;
+    const currentMoons = planetData?.moons.slice(indexOfFirstMoon, indexOfLastMoon);
+
+    const totalPages = Math.ceil((planetData?.moons.length || 0) / itemsPerPage);
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
     const renderInfo = () => {
         if (!planetData) {
             return <p>Ładowanie danych o planecie...</p>;
@@ -128,8 +139,9 @@ function PlanetInfoPage({ planetName, apiUrl }) {
                     <p>Grawitacja: {planetData.gravity} m/s²</p>
                     <p>Średnia Temperatura: {planetData.avgTemp}°C</p>
                     <p>Księżyce ({planetData.moonCount}) :</p>
-                    <ul>
-                        {planetData.moons.map((moon, index) => (
+                    <ul className="moons-grid">
+                        {currentMoons.length > 0 ? (
+                        currentMoons.map((moon, index) => (
                             <li key={index}>
                                 <a
                                     href="#"
@@ -142,8 +154,30 @@ function PlanetInfoPage({ planetName, apiUrl }) {
                                     {moon.name}
                                 </a>
                             </li>
-                        ))}
+                        ))
+                        ) : (
+                            <p>Brak księżyców</p>
+                        )}
                     </ul>
+                    {planetData.moons.length > 0 && totalPages > 1 && (
+                        <div className="moon-pagination">
+                            <button disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
+                                Poprzednia
+                            </button>
+                            {Array.from({ length: totalPages }, (_, i) => (
+                                <button
+                                    key={i + 1}
+                                    className={currentPage === i + 1 ? "active" : ""}
+                                    onClick={() => handlePageChange(i + 1)}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                            <button disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>
+                                Następna
+                            </button>
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -158,7 +192,7 @@ function PlanetInfoPage({ planetName, apiUrl }) {
                 <h2>Księżyc: {foundMoon.name}</h2>
                 <p>Średnica: {(foundMoon.meanRadiusKm * 2)?.toLocaleString('pl-PL')} km</p>
                 <p>Odległość od swojej planety: {foundMoon.distance?.toLocaleString('pl-PL')} km</p>
-                <p>Średnia Temperatura: {foundMoon.avgTemp - 273.15}°C  /  ({foundMoon.avgTemp}°K)</p>
+                <p>Średnia Temperatura: {foundMoon.avgTemp - 273.15}°C / ({foundMoon.avgTemp}°K)</p>
                 <p>Nachylenie orbity: {foundMoon.inclination}°</p>
                 <p>Okres obrotu wokół własnej osi: {formatHoursToTime(foundMoon.rotationPeriod)}</p>
                 <p>Okres obiegu wokół planety: {formatDaysToTime(foundMoon.orbitDuration)}</p>
