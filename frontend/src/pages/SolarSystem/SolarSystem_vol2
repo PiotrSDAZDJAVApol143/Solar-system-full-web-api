@@ -1,0 +1,224 @@
+// src/pages/SolarSystem/SolarSystem.js
+import React, { useRef, useEffect, useState } from 'react';
+import * as THREE from 'three';
+
+// Funkcje pomocnicze – pamiętaj, że te funkcje (createSceneCameraAndRenderer, getScaleFactor, disposeScene)
+// są już przygotowane jako wzorce, a poniższe funkcje dedykowane dla Układu Słonecznego
+import { createSceneCameraAndRenderer } from '../../utils/createSceneCameraAndRenderer';
+import { addSunAndLightSolarSystem, updateLensFlareSolarSystem } from '../../utils/addSunAndLightSolarSystem';
+import { createPlanet } from '../../utils/createPlanet';
+import { createSpaceHorizon } from '../../utils/createSpaceHorizon';
+import { getSolarBodyByName } from '../../services/api';
+import { getScaleFactor } from '../../config/config';
+import { disposeScene } from '../../utils/disposeScene';
+
+import planetsConfig from '../../config/planetsConfig';
+import './SolarSystem.css';
+
+function SolarSystem() {
+    // Referencja do kontenera, w którym zostanie osadzony canvas Three.js
+    const containerRef = useRef(null);
+    // Stan informujący czy dane zostały pobrane
+    const [loading, setLoading] = useState(true);
+
+    // Obiekt przechowujący stan sceny – podobnie jak threeState, ale dedykowany dla układu słonecznego
+    const solarSystemState = useRef({
+        scene: null,
+        camera: null,
+        renderer: null,
+        controls: null,
+        sun: null,
+        lensflare: null,
+        planetSystems: [], // Każdy wpis: { pivot, mesh, angularSpeed, data }
+        gui: null,
+        animateId: null,
+    });
+
+    useEffect(() => {
+        async function initScene() {
+            // 1. Pobierz dane dla planet z backendu (przed wygenerowaniem sceny)
+            const planetNames = Object.keys(planetsConfig); // np. "Mercury", "Venus", "Earth", itd.
+            let planetsData = [];
+            try {
+                planetsData = await Promise.all(
+                    planetNames.map(name => getSolarBodyByName(name.toLowerCase()))
+                );
+            } catch (error) {
+                console.error("Błąd pobierania danych planet:", error);
+            }
+
+            // 2. Inicjalizacja sceny Three.js
+            const container = containerRef.current;
+            if (!container) return;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const { scene, camera, renderer, controls } = createSceneCameraAndRenderer(
+                container,
+                width,
+                height,
+                1000,  // Pozycja kamery – możesz dostosować
+                20,    // Parametr planetRadius (użyty przy inicjalizacji kamery)
+                0      // rotationAngle
+            );
+            solarSystemState.current.scene = scene;
+            solarSystemState.current.camera = camera;
+            solarSystemState.current.renderer = renderer;
+            solarSystemState.current.controls = controls;
+
+            // 3. Dodaj tło – np. sferę kosmiczną
+            createSpaceHorizon(scene, 1000);
+
+            // 4. Dodaj Słońce i światła dla Układu Słonecznego (nasza dedykowana funkcja)
+            const sunOptions = {
+                sunDistance: 0,
+                sunRadius: 50,
+                flarePower: 200,
+                ambientLightPower: 1.5,
+                sunTexturePath: "/assets/textures/star/sun_surface.jpg",
+                lensflareTextures: [
+                    '/assets/textures/star/lensflare.close2.png',
+                    '/assets/textures/star/flare.halo2.png',
+                    '/assets/textures/star/flare.halo2.png'
+                ]
+            };
+            const sunResult = addSunAndLightSolarSystem(scene, camera, sunOptions);
+            solarSystemState.current.sun = sunResult.sunMesh;
+            solarSystemState.current.lensflare = sunResult.lensflare;
+
+            // 5. Dla każdej planety utwórz pivoty oraz linie orbit (bez księżyców)
+            planetsData.forEach(data => {
+                // Oblicz skalę – przyjmujemy, że skala zależy od semiMajorAxis
+                const scaleFactor = getScaleFactor(data.semiMajorAxis);
+                // Wyznacz odległość orbity i rozmiar planety
+                const orbitRadius = data.semiMajorAxis * scaleFactor;
+                const planetRadius = data.meanRadius * scaleFactor;
+                // Wczytaj tekstury – jeśli brakuje, przekazujemy null
+                const texturePath = data.textures?.surfaceTexture ? `/${data.textures.surfaceTexture}` : null;
+                const normalMapPath = data.textures?.normalMapTexture ? `/${data.textures.normalMapTexture}` : null;
+                const bumpMapPath = data.textures?.bumpMapTexture ? `/${data.textures.bumpMapTexture}` : null;
+                const aoMapPath = data.textures?.ambientOcclusionMapTexture ? `/${data.textures.ambientOcclusionMapTexture}` : null;
+                const specularMapPath = data.textures?.specularMapTexture ? `/${data.textures.specularMapTexture}` : null;
+
+                // Utwórz mesh planety
+                const planetMesh = createPlanet(
+                    planetRadius,
+                    texturePath,
+                    5,  // shininess – wartość przykładowa
+                    normalMapPath,
+                    bumpMapPath,
+                    aoMapPath,
+                    specularMapPath
+                );
+                planetMesh.name = data.englishName;
+                // Ustaw planetę na początku orbity (pozycja: (orbitRadius, 0, 0))
+                planetMesh.position.set(orbitRadius, 0, 0);
+
+                // Utwórz pivot, który umożliwi obrót planety wokół Słońca
+                const pivot = new THREE.Object3D();
+                pivot.add(planetMesh);
+                scene.add(pivot);
+
+                // Utwórz eliptyczną orbitę – wykorzystujemy EllipseCurve
+                const orbitCurve = new THREE.EllipseCurve(
+                    0, 0,               // środek
+                    orbitRadius, orbitRadius, // promienie
+                    0, 2 * Math.PI,     // pełny obrót
+                    false,
+                    0
+                );
+                const orbitPoints = orbitCurve.getPoints(100).map(p => new THREE.Vector3(p.x, 0, p.y));
+                const orbitGeometry = new THREE.BufferGeometry().setFromPoints(orbitPoints);
+                const orbitMaterial = new THREE.LineBasicMaterial({ color: 0x888888 });
+                const orbitLine = new THREE.LineLoop(orbitGeometry, orbitMaterial);
+                // Obracamy orbitę, by leżała w płaszczyźnie XZ
+                orbitLine.rotation.x = Math.PI / 2;
+                scene.add(orbitLine);
+
+                // Wylicz prędkość kątową obiegu – korzystamy z konfiguracji z planetsConfig lub danych z backendu
+                const planetConfig = planetsConfig[data.englishName] || {};
+                const simOrbitDuration = planetConfig.sunOrbitDuration || data.orbitalPeriod; // jednostki: "symulacyjne sekundy"
+                const angularSpeed = (2 * Math.PI) / simOrbitDuration;
+
+                solarSystemState.current.planetSystems.push({
+                    pivot,
+                    mesh: planetMesh,
+                    angularSpeed,
+                    data: { ...data, scaleFactor, orbitRadius, planetRadius }
+                });
+            });
+
+            // Ustaw loading na false – scena jest gotowa
+            setLoading(false);
+
+            // 6. Pętla animacji
+            let previousTime = performance.now();
+            const animate = () => {
+                solarSystemState.current.animateId = requestAnimationFrame(animate);
+                const currentTime = performance.now();
+                const delta = (currentTime - previousTime) / 1000;
+                previousTime = currentTime;
+
+                // Obracaj pivoty planet (ruch orbitalny)
+                solarSystemState.current.planetSystems.forEach(system => {
+                    system.pivot.rotation.y += system.angularSpeed * delta;
+                });
+
+                // Aktualizuj efekt lensflare dla Słońca
+                updateLensFlareSolarSystem(
+                    camera,
+                    solarSystemState.current.sun,
+                    solarSystemState.current.lensflare,
+                    200
+                );
+
+                controls.update();
+                renderer.render(scene, camera);
+            };
+            animate();
+
+            // Obsługa zmiany rozmiaru okna
+            const onResize = () => {
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h);
+            };
+            window.addEventListener('resize', onResize);
+        }
+
+        initScene();
+
+        return () => {
+            window.removeEventListener('resize', () => {});
+            if (solarSystemState.current.animateId) {
+                cancelAnimationFrame(solarSystemState.current.animateId);
+            }
+            disposeScene({
+                scene: solarSystemState.current.scene,
+                renderer: solarSystemState.current.renderer,
+                controls: solarSystemState.current.controls,
+                gui: solarSystemState.current.gui,
+                labelRenderer: null,
+                animateId: solarSystemState.current.animateId,
+                container: containerRef.current
+            });
+        };
+    }, []);
+
+    return (
+        <div className="page">
+            <h1>Trójwymiarowy model Układu Słonecznego w skali</h1>
+            {loading && <p>Ładowanie danych...</p>}
+            <div className="container-fluid">
+                <div className="row">
+                    <div className="col-md-11 solar-container" ref={containerRef} style={{ height: '85vh' }}>
+                        {/* Canvas Three.js */}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default SolarSystem;

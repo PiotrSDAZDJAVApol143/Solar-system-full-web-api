@@ -23,4 +23,6 @@ function Star({ planetData }) {
 
 }
 
+
+
 export default Star;

@@ -43,7 +43,7 @@ export function updateLabelVisibility(labelObject, targetObject, camera, raycast
     // Ustaw raycaster
     raycaster.set(camera.position, targetPosition.clone().sub(camera.position).normalize());
 
-    let filteredOcclusionObjects = occlusionObjects.filter(obj => obj && obj.isObject3D && obj !== targetObject);
+    let filteredOcclusionObjects = occlusionObjects.filter(obj => obj && obj !== targetObject && obj.name !== 'PlanetRing');
     let intersects = raycaster.intersectObjects(filteredOcclusionObjects, true);
 
     if (intersects.length > 0) {

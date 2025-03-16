@@ -13,10 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.PatchMapping;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 @RestController
@@ -68,6 +65,25 @@ public class SolarBodiesController {
     public Set<Moon> getMoonsBySolarBodyName(@PathVariable String englishName) {
         return solarBodiesService.getMoonsBySolarBodyName(englishName);
     }
+    @GetMapping("/solarsystem")
+    public ResponseEntity<Map<String, Object>> getSolarSystem() {
+        // Znajdź Słońce
+        SolarBodies sunEntity = solarBodiesService.getSolarBodyByName("Sun");
+        SolarBodyDTO sunDto = solarBodiesService.convertToDTOWithFullMoons(sunEntity);
+
+        // Znajdź wszystkie planety (zwykłe + karłowate)
+        List<SolarBodies> planets = solarBodiesService.findAllPlanets();
+        List<SolarBodyDTO> planetDtos = planets.stream()
+                .map(solarBodiesService::convertToDTOWithFullMoons)
+                .toList();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("sun", sunDto);
+        result.put("planets", planetDtos);
+
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping
     public ResponseEntity<SolarBodyDTO> createSolarBody(@RequestBody SolarBodyDTO solarBodyDTO) {
         SolarBodies solarBody = SolarBodyMapper.convertToEntity(solarBodyDTO);
@@ -102,6 +118,7 @@ public class SolarBodiesController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
 
 
 }

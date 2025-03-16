@@ -1,8 +1,9 @@
 // src/components/Planet/PlanetScene.js
-import * as THREE from 'three';
+import
+    * as THREE from 'three';
 import { createSceneCameraAndRenderer } from '../../utils/createSceneCameraAndRenderer';
 import { createPlanet, loader } from '../../utils/createPlanet';
-import { addSunAndLight } from '../../utils/addSunAndLight';
+import { addSunAndLight, updateLensFlare } from '../../utils/addSunAndLight';
 import { createSpaceHorizon } from '../../utils/createSpaceHorizon';
 import getStarfield from '../../utils/getStarfield';
 import { handleWindowResize } from '../../utils/handleWindowResize';
@@ -92,6 +93,7 @@ export function initializePlanetScene(containerElement) {
     threeState.camera = camera;
     threeState.renderer = renderer;
     threeState.controls = controls;
+
 
     // Zapinamy eventy
     window.addEventListener('resize', onWindowResizeHandler, false);
@@ -344,19 +346,9 @@ export function updatePlanetScene(newPlanetData) {
     if (!threeState.gui) {
         const resetCameraFunction = () => {
             stopFollowing();
-           /* resetCamera(
-                threeState.camera,
-                threeState.controls,
-                threeState.state,
-                threeState.initialCameraPosition,
-                threeState.initialControlsTarget,
-                threeState.initialMinDistance,
-                threeState.initialMaxDistance,
-            );
-
-            */
         };
         threeState.gui = initializeGUI(
+            'soloPlanet',
             threeState.guiParams,
             toggleObjectNames,
             threeState.orbitTails,
@@ -404,6 +396,7 @@ function addSunAndSkyboxIfNeeded(planetData) {
     // Dodaj słońce + światło
     const sunResult = addSunAndLight(
         threeState.scene,
+        threeState.camera,
         planetData.sunDistance || 100000,
         planetData.sunRadius   || 1000,
         planetData.flarePower  || 900,
@@ -413,6 +406,8 @@ function addSunAndSkyboxIfNeeded(planetData) {
     threeState.sunLight = sunResult.sunLight;
     threeState.sunPivot = sunResult.sunPivot;
     threeState.ambientLight = sunResult.ambientLight;
+    threeState.lensflare = sunResult.lensflare;
+    threeState.bloomComposer = sunResult.bloomComposer;
     threeState.occlusionObjects.push(threeState.sunMesh);
 
     // Sfera kosmiczna
@@ -501,8 +496,15 @@ function animate() {
     if (threeState.labelRenderer) {
         threeState.labelRenderer.render(threeState.scene, threeState.camera);
     }
+    updateLensFlare(threeState.camera, threeState.sunMesh, threeState.lensflare, threeState.planetData.flarePower);
+
+
     //console.log("FRAME camera:", threeState.camera.position);
-    threeState.renderer.render(threeState.scene, threeState.camera);
+    if (threeState.bloomComposer) {
+        threeState.bloomComposer.render();
+    } else {
+        threeState.renderer.render(threeState.scene, threeState.camera);
+    }
 }
 
 
@@ -701,14 +703,14 @@ export function focusOnObjectFromList(objectName) {
         if (state.currentTargetObject === moon.mesh && state.isFollowingObject) {
             return;
         }
-        focusOnObject(moon.mesh, camera, controls, state);
+        focusOnObject(moon.mesh, camera, controls, state, 'PlanetScene');
         //updatePlanetInfo(moon.mesh);
     } else if (objectName === planetData.name) {
         console.log("Przejście do planety:", planetData.name); //Debugowanie
         if (state.currentTargetObject === planetMesh && state.isFollowingObject) {
             return;
         }
-        focusOnObject(planetMesh, camera, controls, state);
+        focusOnObject(planetMesh, camera, controls, state, 'PlanetScene');
        // updatePlanetInfo(planetMesh);
 
         // Nowy mechanizm do wymuszenia renderowania

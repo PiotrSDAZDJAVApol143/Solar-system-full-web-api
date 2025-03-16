@@ -39,9 +39,9 @@ public class SolarBodyMapper {
         dto.setMoonCount(solarBody.getMoonCount());
 
 
-        dto.setSemiMajorAxis(solarBody.getSemimajorAxis() != null ? solarBody.getSemimajorAxis().intValue() : null);
-        dto.setPerihelion(solarBody.getPerihelion() != null ? solarBody.getPerihelion().intValue() : null);
-        dto.setAphelion(solarBody.getAphelion() != null ? solarBody.getAphelion().intValue() : null);
+        dto.setSemiMajorAxis(solarBody.getSemimajorAxis() != null ? solarBody.getSemimajorAxis().longValue() : null);
+        dto.setPerihelion(solarBody.getPerihelion() != null ? solarBody.getPerihelion().longValue() : null);
+        dto.setAphelion(solarBody.getAphelion() != null ? solarBody.getAphelion().longValue() : null);
         dto.setInclination(solarBody.getInclination());
         dto.setGravity(solarBody.getGravity());
         dto.setEscapeSpeed(solarBody.getEscape());

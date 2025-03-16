@@ -3,8 +3,9 @@ import * as THREE from 'three';
 
 export function createSpaceHorizon(scene, spaceHorizonDistance){
     const loader = new THREE.TextureLoader();
-    const spaceTexture = loader.load('/assets/textures/8k_stars_milky_way.jpg');
-
+    const spaceTexture = loader.load('/assets/textures/space1.jpg');
+    spaceTexture.wrapS = THREE.RepeatWrapping;
+    spaceTexture.wrapT = THREE.RepeatWrapping;
     spaceTexture.repeat.set(1, 1);
     spaceTexture.mapping = THREE.EquirectangularReflectionMapping;
 

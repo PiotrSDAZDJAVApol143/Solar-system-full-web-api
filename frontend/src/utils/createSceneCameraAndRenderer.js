@@ -11,7 +11,12 @@ export function createSceneCameraAndRenderer(container, w, h, cameraPosition, pl
     camera.position.set(0, 0, cameraPosition || 50);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    //logarithmicDepthBuffer: true,
+    if (!(renderer instanceof THREE.WebGLRenderer)) {
+        console.error("Renderer nie jest poprawnym WebGLRenderer.");
+    }
     renderer.setSize(w, h);
+    renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
     // Zaktualizuj tonemapping i outputColorSpace
@@ -22,7 +27,7 @@ export function createSceneCameraAndRenderer(container, w, h, cameraPosition, pl
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.minDistance = 0.1;
+    controls.minDistance = 0.01;
     controls.maxDistance = 1e6;
 
     return { scene, camera, renderer, controls };

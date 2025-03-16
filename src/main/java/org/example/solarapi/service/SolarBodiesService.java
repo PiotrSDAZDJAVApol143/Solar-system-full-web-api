@@ -55,7 +55,7 @@ public class SolarBodiesService {
             solarBodiesDetails.setMoonCount(solarBodiesDetails.getMoons().size());
 
             // Czy mamy już w bazie?
-            SolarBodies existingSolarBody = solarBodiesRepository.findByEnglishName(englishName);
+            SolarBodies existingSolarBody = solarBodiesRepository.findByEnglishNameIgnoreCase(englishName);
 
             if (existingSolarBody != null) {
                 // Zainicjalizuj pole moons w istniejącym obiekcie, jeśli jest null
@@ -96,7 +96,7 @@ public class SolarBodiesService {
                 solarBody.setMoonCount(solarBody.getMoons().size());
 
                 // Zapis
-                SolarBodies existing = solarBodiesRepository.findByEnglishName(solarBody.getEnglishName());
+                SolarBodies existing = solarBodiesRepository.findByEnglishNameIgnoreCase(solarBody.getEnglishName());
                 if (existing != null) {
                     existing.setMoons(solarBody.getMoons());
                     existing.setMoonCount(solarBody.getMoonCount());
@@ -114,7 +114,7 @@ public class SolarBodiesService {
      * Zwraca obiekt z bazy po englishName (lub null).
      */
     public SolarBodies getSolarBodyByName(String englishName) {
-        SolarBodies solarBody = solarBodiesRepository.findByEnglishName(englishName);
+        SolarBodies solarBody = solarBodiesRepository.findByEnglishNameIgnoreCase(englishName);
         if (solarBody == null) {
             logger.warning("No solar body found for: " + englishName);
         }
@@ -134,7 +134,7 @@ public class SolarBodiesService {
                 solarBodiesDetails.setMoons(new HashSet<>());
             }
             solarBodiesDetails.setMoonCount(solarBodiesDetails.getMoons().size());
-            SolarBodies existingSolarBody = solarBodiesRepository.findByEnglishName(englishName);
+            SolarBodies existingSolarBody = solarBodiesRepository.findByEnglishNameIgnoreCase(englishName);
             if (existingSolarBody != null) {
                 existingSolarBody.setMoons(solarBodiesDetails.getMoons());
                 existingSolarBody.setMoonCount(solarBodiesDetails.getMoonCount());
@@ -155,7 +155,7 @@ public class SolarBodiesService {
      * lub pusty set jeśli nie istnieje.
      */
     public Set<Moon> getMoonsBySolarBodyName(String englishName) {
-        SolarBodies solarBody = solarBodiesRepository.findByEnglishName(englishName);
+        SolarBodies solarBody = solarBodiesRepository.findByEnglishNameIgnoreCase(englishName);
         if (solarBody != null) {
             return solarBody.getMoons();
         } else {
@@ -273,7 +273,7 @@ public class SolarBodiesService {
 
     @Transactional
     public SolarBodies fetchAndSaveSolarBody(String englishName) {
-        SolarBodies existing = solarBodiesRepository.findByEnglishName(englishName);
+        SolarBodies existing = solarBodiesRepository.findByEnglishNameIgnoreCase(englishName);
         if (existing != null) return existing;
 
         String encodedName = HttpClientService.encodeValue(englishName.toLowerCase());
@@ -301,7 +301,7 @@ public class SolarBodiesService {
             Set<MoonDTO> expandedMoons = new HashSet<>();
             for (MoonDTO basicMoon : dto.getMoons()) {
                 // spróbujmy znaleźć w bazie
-                SolarBodies moonBody = solarBodiesRepository.findByEnglishName(basicMoon.getEnglishName());
+                SolarBodies moonBody = solarBodiesRepository.findByEnglishNameIgnoreCase(basicMoon.getEnglishName());
                 if (moonBody == null) {
                     // Spróbujmy fetchByRel (jeśli mamy link w rel)
                     if (basicMoon.getRel() != null) {
@@ -344,7 +344,7 @@ public class SolarBodiesService {
         }
 
         // 1. Sprawdź w bazie
-        SolarBodies existing = solarBodiesRepository.findByEnglishName(englishName);
+        SolarBodies existing = solarBodiesRepository.findByEnglishNameIgnoreCase(englishName);
         if (existing != null) {
             return existing;
         }
@@ -469,6 +469,17 @@ public class SolarBodiesService {
                     .append(Integer.toHexString((int) c));
         }
         return sb.toString();
+    }
+    public List<SolarBodies> findAllPlanets() {
+        // 1) Pobierz wszystkie ciała, które mają isPlanet = true
+        List<SolarBodies> normalPlanets = solarBodiesRepository.findByIsPlanetTrue();
+        List<SolarBodies> dwarfPlanets = solarBodiesRepository.findByBodyTypeIgnoreCase("Dwarf Planet");
+        // 3) Połącz obie listy
+        List<SolarBodies> combined = new ArrayList<>();
+        combined.addAll(normalPlanets);
+        combined.addAll(dwarfPlanets);
+
+        return combined;
     }
 
 }

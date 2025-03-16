@@ -12,9 +12,9 @@ public class SolarBodyDTO {
     private String bodyType;
     private boolean planet;
     private Double meanRadius;
-    private Integer semiMajorAxis;
-    private Integer perihelion;
-    private Integer aphelion;
+    private Long semiMajorAxis;
+    private Long perihelion;
+    private Long aphelion;
     private Double inclination;
     private Double mass;
     private Double vol;

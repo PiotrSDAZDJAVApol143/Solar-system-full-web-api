@@ -101,48 +101,6 @@
     grid-template-rows: repeat(6, auto); /* 6 wierszy */
     gap: 10px;
 }
-
-.carousel {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    gap: 15px;
-}
-
-.carousel-item {
-    display: grid;
-    grid-gap: 10px;
-    list-style: none;
-    padding: 10px;
-    margin: 0;
-}
-
-.carousel-item.active {
-    display: block;
-}
-
-.carousel-pagination {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-top: 10px;
-}
-
-.carousel-page-btn {
-    background-color: #fff;
-    color: #333;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.carousel-page-btn:hover,
-.carousel-page-btn.active {
-    background-color: #58a6ff;
-    color: #fff;
-}
 .label {
     color: rgba(131, 125, 125, 0.742);
     font-family: Arial, sans-serif;
@@ -151,4 +109,10 @@
     position: relative;
     cursor: pointer;
     pointer-events: auto;
+}
+.lens-flare {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }

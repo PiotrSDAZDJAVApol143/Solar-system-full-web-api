@@ -3,8 +3,12 @@ import * as THREE from 'three';
 
 export const loader = new THREE.TextureLoader();
 
-export function createPlanet(planetRadius, texturePath, shininess, normalMapPath, bumpMapPath, aoMapPath, specularMapPath) {
-    const geometry = new THREE.SphereGeometry(planetRadius, 256, 256); // Używamy 256 segmentów
+export function createPlanet(planetRadius, texturePath, shininess, normalMapPath, bumpMapPath, aoMapPath, specularMapPath, options = {}) {
+    const { lowDetailMode = false } = options;
+    const widthSegments = lowDetailMode ? 64 : 256;
+    const heightSegments = lowDetailMode ? 64 : 256;
+
+    const geometry = new THREE.SphereGeometry(planetRadius, widthSegments, heightSegments);
   //  console.log("Tworzenie planety z radius:", planetRadius);
     const mapTexture = loader.load(texturePath);
     mapTexture.colorSpace = THREE.SRGBColorSpace;

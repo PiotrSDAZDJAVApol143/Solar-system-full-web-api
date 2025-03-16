@@ -1,0 +1,33 @@
+.page {
+    padding: 20px;
+}
+
+.solar-container {
+    position: relative;
+    height: 80vh;
+    width: 95vw;
+    z-index: 4;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+    border: 2px solid #ddd;
+}
+
+.solar-info {
+    background-color: rgba(25, 27, 30, 0.62);
+    border: 2px solid #ddd;
+    border-radius: 15px;
+    padding: 20px;
+    color: #dcdcdc;
+    margin-left: 20px;
+}
+.label {
+    color: rgba(131, 125, 125, 0.742);
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    text-shadow: 0 0 5px black;
+    position: relative;
+    cursor: pointer;
+    pointer-events: auto;
+}

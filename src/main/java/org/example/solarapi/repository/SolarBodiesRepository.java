@@ -10,6 +10,9 @@ import java.util.Optional;
 @Repository
 public interface SolarBodiesRepository extends JpaRepository<SolarBodies, Long> {
     SolarBodies findByEnglishName(String englishName);
+    SolarBodies findByEnglishNameIgnoreCase(String englishName);
     Optional<SolarBodies> findById(Long id);
+    List<SolarBodies> findByIsPlanetTrue();
+    List<SolarBodies> findByBodyTypeIgnoreCase(String bodyType);
 }
 

@@ -3,11 +3,12 @@ import * as THREE from 'three';
 import { gsap } from "gsap";
 import { updatePlanetInfo } from '../components/Planet/PlanetScene';
 
-export function focusOnObject(object, camera, controls, state) {
+export function focusOnObject(object, camera, controls, state, sceneType, options = {}) {
     if (!controls || !camera || !object) {
         console.error("Brak niezbędnych argumentów w focusOnObject.");
         return;
     }
+    const stopAfterFocus = options.stopAfterFocus === true;
 
     // Jeśli już trwa animacja, zignoruj żądanie
     if (state.isTweening) {
@@ -33,27 +34,36 @@ export function focusOnObject(object, camera, controls, state) {
     let controlsMinDistance;
     let controlsMaxDistance;
 
-    if (diameter > 0.5) {
-     //   console.log("obiekt średni")
-        // Dla obiektów o średnicy większej niż 0.5
+    if (sceneType === 'SolarSystemScene') {
+        // Dla sceny całego układu słonecznego:
         cameraMinDistance = diameter * 1.2;
-        controlsMinDistance = cameraMinDistance * 0.5;
-        controlsMaxDistance = cameraMinDistance * 100;
+        controlsMinDistance = diameter * 0.6; // Możesz podejść do 120% średnicy planety
+        controlsMaxDistance = diameter * 1000; // Duży zakres, żeby łatwo się oddalać
+    } else if (sceneType === 'PlanetScene') {
+        // Twój pierwotny kod, który uwzględnia nieregularne obiekty
+        if (diameter > 0.5) {
+            cameraMinDistance = diameter * 1.2;
+            controlsMinDistance = cameraMinDistance * 0.5;
+            controlsMaxDistance = cameraMinDistance * 20;
+        } else {
+            cameraMinDistance = diameter * 1.3;
+            controlsMinDistance = cameraMinDistance * 6;
+            controlsMaxDistance = cameraMinDistance * 100;
+        }
     } else {
-    //    console.log("obiekt mały")
-        // Dla obiektów o średnicy mniejszej lub równej 0.5
-        cameraMinDistance = diameter * 1.3;
-        controlsMinDistance = cameraMinDistance * 6;
-        controlsMaxDistance = cameraMinDistance * 100;
+        console.error("Nieznany typ sceny:", sceneType);
+        return;
     }
 
-
-    console.log("Promień obiektu:", radius);
-   console.log("obiekt mały/średni zdefiniowany przez Ciebie");
-    console.log("Minimalna odległość kamery:", cameraMinDistance);
-
+    // Zawsze aktualizujemy limity kontrolera OrbitControls
     controls.minDistance = controlsMinDistance;
     controls.maxDistance = controlsMaxDistance;
+
+    controls.saveState();
+
+ //   console.log("Promień obiektu:", radius);
+ //  console.log("obiekt mały/średni zdefiniowany przez Ciebie");
+ //   console.log("Minimalna odległość kamery:", cameraMinDistance);
     controls.enableRotate = true;
     controls.enableZoom = true;
     controls.enablePan = false;
@@ -117,6 +127,10 @@ export function focusOnObject(object, camera, controls, state) {
             state.isTweening = false;
             controls.target.copy(newTargetPosition);
             controls.update();
+            if (stopAfterFocus) {
+                state.isFollowingObject = false;
+                state.currentTargetObject = null;
+            }
         },
         onUpdate: () => {
             controls.update();
