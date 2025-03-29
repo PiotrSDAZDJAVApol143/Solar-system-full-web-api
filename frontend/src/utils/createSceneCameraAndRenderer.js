@@ -5,13 +5,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 export function createSceneCameraAndRenderer(container, w, h, cameraPosition, planetRadius, rotationAngle) {
     const scene = new THREE.Scene();
     const angle = THREE.MathUtils.degToRad(rotationAngle);
-    // Tutaj było np. planetRadius * 2.5, a Ty przepisałeś to na 20
-    // -> Zastąp to prostą logiką:
     const camera = new THREE.PerspectiveCamera(75, w / h, 0.01, 600000);
     camera.position.set(0, 0, cameraPosition || 50);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    //logarithmicDepthBuffer: true,
     if (!(renderer instanceof THREE.WebGLRenderer)) {
         console.error("Renderer nie jest poprawnym WebGLRenderer.");
     }

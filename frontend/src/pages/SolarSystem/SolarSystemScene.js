@@ -65,6 +65,8 @@ export function initializeStarScene(containerElement, solarSystemData) {
     renderer.shadowMap.enabled = false;
     renderer.autoClear = false;
 
+    camera.layers.enableAll();
+
     // Postprocessing Bloom
     const renderScene = new RenderPass(scene, camera);
     bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 2.4, 1.55, 0.3);
@@ -72,6 +74,8 @@ export function initializeStarScene(containerElement, solarSystemData) {
     bloomComposer.setSize(w, h);
     bloomComposer.addPass(renderScene);
     bloomComposer.addPass(bloomPass);
+
+
 
     // Tło (Space Horizon + gwiazdki)
     createSpaceHorizon(scene, solarSystemData.spaceHorizonDistance || 600000);
@@ -81,7 +85,7 @@ export function initializeStarScene(containerElement, solarSystemData) {
     createSun(scene, solarSystemData.sun);
 
     // Mocne światło w słońcu
-    const sunLight = new THREE.PointLight(0xfff5e1, 2.5e8, 600000);
+    const sunLight = new THREE.PointLight(0xfff5e1, 1e8, 600000, 2);
     sunLight.position.set(0, 0, 0);
     renderer.physicallyCorrectLights = true;
     sunLight.castShadow = true;
@@ -125,8 +129,6 @@ export function initializeStarScene(containerElement, solarSystemData) {
     animate();
 }
 
-// --- Mniejsze funkcje tworzące obiekty w scenie ---
-
 function createSun(scene, sunData) {
     if (!sunData) return;
 
@@ -150,7 +152,8 @@ function createSun(scene, sunData) {
     sunMesh.userData = sunMesh.userData || {};
     sunMesh.userData.radius = sunRadius;
     sunMesh.userData.englishName = "Sun";
-
+    sunMesh.layers.enable(0);
+    sunMesh.layers.enable(1);
     scene.add(sunMesh);
 
     // Korona
@@ -163,6 +166,7 @@ function createSun(scene, sunData) {
             blending: THREE.AdditiveBlending
         })
     );
+    coronaMesh.layers.set(1);
     scene.add(coronaMesh);
 
     coronaMesh2 = new THREE.Mesh(
@@ -174,6 +178,7 @@ function createSun(scene, sunData) {
             blending: THREE.NormalBlending
         })
     );
+    coronaMesh2.layers.set(1);
     scene.add(coronaMesh2);
 
     // Lens Flare
@@ -181,6 +186,7 @@ function createSun(scene, sunData) {
         const flareTexture = textureLoader.load('/assets/textures/star/lensflare.close.png');
         const lensflare = new Lensflare();
         lensflare.addElement(new LensflareElement(flareTexture, sunData.flarePower, 0));
+        lensflare.layers.set(1);
         sunMesh.add(lensflare);
     }
 }
@@ -221,6 +227,19 @@ export function disposeStarScene() {
 function animate(time) {
     animateId = requestAnimationFrame(animate);
     if (!renderer) return;
+    controls?.update();
+
+    renderer.clear(true, true, true);
+    camera.layers.set(1); // tylko Słońce
+    bloomComposer.render();
+
+    renderer.autoClear = false;
+    renderer.clearDepth();
+    camera.layers.set(0); // pozostałe obiekty (planety, chmury itp.)
+    renderer.render(scene, camera);
+
+    // labelRenderer (opcjonalnie)
+    labelRenderer?.render(scene, camera);
 
     // ** Obliczamy daysPassed z uwzględnieniem prędkości z GUI:
     const deltaTime = clock.getDelta(); // sekundy
@@ -228,7 +247,7 @@ function animate(time) {
 
     const doOrbitUpdate = guiParams.orbitDynamic;
     // update orbit controls
-    controls?.update();
+
     if (sunMesh) {
         sunMesh.rotation.y += 0.001;
         sunMesh.rotation.x += 0.0005;

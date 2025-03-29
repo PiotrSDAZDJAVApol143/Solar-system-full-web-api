@@ -100,12 +100,24 @@ export function createSolarSystemPlanet({
     const cloudTexturePath = planetData.textures?.cloudTexture;
     if (cloudTexturePath) {
         const cloudTex = new THREE.TextureLoader().load(cloudTexturePath);
+        let alphaMapTex = null;
+        if (planetData.textures?.cloudAlphaTexture) {
+            alphaMapTex = new THREE.TextureLoader().load( planetData.textures.cloudAlphaTexture );
+        }
         const cloudMaterial = new THREE.MeshStandardMaterial({
             map: cloudTex,
             transparent: true,
             opacity: planetData.cloudOpacity ?? 0.95,
-            depthWrite: false
+            depthWrite: false,
+            blending: THREE.NormalBlending,
+            metalness: 0.0,
+            roughness: 0.9,
+
         });
+        if (alphaMapTex) {
+            cloudMaterial.alphaMap = alphaMapTex;
+        }
+
         const cloudGeo = new THREE.SphereGeometry(planetRadius, 64, 64);
         const cloudsMesh = new THREE.Mesh(cloudGeo, cloudMaterial);
         const scale = planetData.cloudScale ?? 1.025;

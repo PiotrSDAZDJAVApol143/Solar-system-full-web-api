@@ -24,6 +24,7 @@ const planetsConfig = {
         cloudRotationSpeed: 20,
         cloudOpacity: 0.6,
         cloudScale: 1.015,
+        cloudAlphaTexture: "/assets/textures/earth/earth_cloud_Alpha.png",
     },
     Mars: {
         sunOrbitDuration: 20610,
