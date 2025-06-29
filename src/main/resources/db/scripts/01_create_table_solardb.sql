@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS Solar_Bodies
+CREATE TABLE IF NOT EXISTS solar_bodies
 (
     id_number        BIGINT PRIMARY KEY AUTO_INCREMENT,
     external_id      VARCHAR(255) UNIQUE,
@@ -29,18 +29,19 @@ CREATE TABLE IF NOT EXISTS Solar_Bodies
     moon_count       INT
 );
 
-CREATE TABLE IF NOT EXISTS Moons
+CREATE TABLE IF NOT EXISTS moons
 (
     id              BIGINT PRIMARY KEY AUTO_INCREMENT,
     solar_bodies_id BIGINT,
     moon            VARCHAR(255),
     rel             VARCHAR(255),
-    FOREIGN KEY (solar_bodies_id) REFERENCES Solar_Bodies (id_number)
+    original_name   VARCHAR(255),
+    FOREIGN KEY (solar_bodies_id) REFERENCES solar_bodies (id_number)
 );
 
-UPDATE Solar_Bodies
+UPDATE solar_bodies
 SET moon_count = (
     SELECT COUNT(*)
-    FROM Moons
-    WHERE Moons.solar_bodies_id = Solar_Bodies.id_number
+    FROM moons
+    WHERE moons.solar_bodies_id = solar_bodies.id_number
 );

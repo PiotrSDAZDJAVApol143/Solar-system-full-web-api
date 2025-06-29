@@ -94,9 +94,9 @@ public class SolarBodyMapper {
         String baseName = englishName.replaceAll("\\s+", "_").toLowerCase();
         String basePath;
         if ("moon".equalsIgnoreCase(bodyType)) {
-            basePath = "assets/textures/moon/";
+            basePath = "/assets/textures/moon/";
         } else {
-            basePath = "assets/textures/" + baseName + "/";
+            basePath = "/assets/textures/" + baseName + "/";
         }
 
         // Generowanie ścieżek do poszczególnych tekstur bez rozszerzenia
@@ -115,14 +115,17 @@ public class SolarBodyMapper {
             String baseTextureName = baseName + entry.getKey(); // np. earth_surface
             String jpgPath = basePath + baseTextureName + ".jpg";
             String pngPath = basePath + baseTextureName + ".png";
-
+            System.out.println("Sprawdzam plik: " + jpgPath + " | " + pngPath); // <-- dodaj
             if (fileExists(jpgPath)) {
+                System.out.println("JPG istnieje: " + jpgPath);
                 entry.getValue().accept(jpgPath);
             } else if (fileExists(pngPath)) {
+                System.out.println("PNG istnieje: " + pngPath);
                 entry.getValue().accept(pngPath);
+            } else {
+                System.out.println("Nie znaleziono: " + jpgPath + " ani " + pngPath);
             }
         }
-
         return textures;
     }
     private static String generateModelPath(String englishName, String bodyType) {
@@ -148,8 +151,8 @@ public class SolarBodyMapper {
         return null;
     }
     private static boolean fileExists(String relativePath) {
-        Path projectDir = Paths.get(System.getProperty("user.dir"));
-        Path fullPath = projectDir.resolve("frontend").resolve("public").resolve(relativePath);
+        Path publicDir = Paths.get("/app/frontend/public");
+        Path fullPath = publicDir.resolve(relativePath.replaceFirst("^/", ""));
 
         return Files.exists(fullPath);
     }
@@ -223,6 +226,9 @@ public class SolarBodyMapper {
             Set<Moon> moons = dto.getMoons().stream()
                     .map(SolarBodyMapper::convertMoonDTOToEntity)
                     .collect(Collectors.toSet());
+            for (Moon moon : moons) {
+                moon.setSolarBodies(solarBody);
+            }
             solarBody.setMoons(moons);
         } else {
             solarBody.setMoons(new HashSet<>());
@@ -233,7 +239,8 @@ public class SolarBodyMapper {
 
     public static Moon convertMoonDTOToEntity(MoonDTO dto) {
         Moon moon = new Moon();
-        moon.setMoon(dto.getEnglishName());
+        moon.setRel(dto.getRel());
+        moon.setOriginalName(dto.getEnglishName());
         return moon;
     }
     public static MoonDTO convertSolarBodyToMoonDTO(SolarBodies moonBody) {

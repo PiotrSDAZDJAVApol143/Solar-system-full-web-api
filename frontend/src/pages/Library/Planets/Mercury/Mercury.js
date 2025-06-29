@@ -5,7 +5,8 @@ import '../../../../components/Planet/Planet.css';
 import PlanetInfoPage from "../../../../components/Planet/PlanetInfoPage";
 
 function Mercury() {
-    return <PlanetInfoPage planetName="Mercury" apiUrl="http://localhost:8080/api/solarbodies/mercury" />;
+ //   return <PlanetInfoPage planetName="Mercury" apiUrl="http://localhost:8080/api/solarbodies/mercury" />;
+    return <PlanetInfoPage planetName="Mercury" apiUrl="/api/solarbodies/mercury" />;
 }
 
 

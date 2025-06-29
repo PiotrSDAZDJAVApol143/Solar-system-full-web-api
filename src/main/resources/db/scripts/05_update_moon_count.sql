@@ -1,6 +1,6 @@
-UPDATE Solar_Bodies
+UPDATE solar_bodies
 SET moon_count = (
     SELECT COUNT(*)
-    FROM Moons
-    WHERE Moons.solar_bodies_id = Solar_Bodies.id_number
+    FROM moons
+    WHERE moons.solar_bodies_id = solar_bodies.id_number
 );

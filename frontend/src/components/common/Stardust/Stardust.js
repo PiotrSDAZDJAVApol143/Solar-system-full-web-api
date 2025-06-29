@@ -1,12 +1,44 @@
 // src/components/common/Stardust/Stardust.js
-import React, { useRef, useEffect } from 'react';
+import React, {useRef, useEffect, useImperativeHandle, forwardRef} from 'react';
 import * as THREE from 'three';
 import './Stardust.css';
 
-const Stardust = () => {
+const Stardust = forwardRef((props, ref) => {
     const mountRef = useRef(null);
     const requestRef = useRef();
     const starfieldPausedRef = useRef(false);
+    const containerFadeRef = useRef(null);
+
+    const fadeTo = (to, duration = 1000, cb) => {
+        if (!containerFadeRef.current) return;
+        const from = parseFloat(containerFadeRef.current.style.opacity) || 1;
+        const step = (timestamp, startTime) => {
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const value = from + (to - from) * progress;
+            containerFadeRef.current.style.opacity = value;
+            if (progress < 1) {
+                requestAnimationFrame(ts => step(ts, startTime));
+            } else {
+                if (cb) cb();
+            }
+        };
+        requestAnimationFrame(ts => step(ts, ts));
+    };
+
+    // Metody do ref
+    useImperativeHandle(ref, () => ({
+        fadeOut(duration = 1200) {
+            fadeTo(0, duration, () => {
+                starfieldPausedRef.current = true;
+            });
+        },
+        fadeIn(duration = 1000) {
+            // jeśli było zapauzowane — wznowić animację
+            starfieldPausedRef.current = false;
+            fadeTo(1, duration);
+        }
+    }));
 
     useEffect(() => {
         let starfieldScene, starfieldCamera, starfieldRenderer;
@@ -66,6 +98,7 @@ const Stardust = () => {
         // Pętla animacji
         const animate = () => {
             if (starfieldPausedRef.current) {
+                starfieldRenderer.render(starfieldScene, starfieldCamera);
                 requestRef.current = requestAnimationFrame(animate);
                 return;
             }
@@ -115,10 +148,14 @@ const Stardust = () => {
 
     return (
         <div
-            ref={mountRef}
+            ref={el => {
+                mountRef.current = el;
+                containerFadeRef.current = el;
+            }}
             className="stardust-container"
+            style={{opacity: 1, transition: 'opacity 0.2s linear'}}
         ></div>
     );
-};
+});
 
 export default Stardust;

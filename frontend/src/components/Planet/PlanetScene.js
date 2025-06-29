@@ -137,11 +137,35 @@ export function updatePlanetScene(newPlanetData) {
     threeState.scene.add(threeState.planetGroup);
 
     // Tworzymy samą planetę (mesh)
-    const texturePath = newPlanetData.texturePath ? `/${newPlanetData.texturePath}` : null;
-    const normalMapPath = newPlanetData.normalMapPath ? `/${newPlanetData.normalMapPath}` : null;
-    const bumpMapPath = newPlanetData.bumpMapPath ? `/${newPlanetData.bumpMapPath}` : null;
-    const aoMapPath = newPlanetData.aoMapPath ? `/${newPlanetData.aoMapPath}` : null;
-    const specularMapPath = newPlanetData.specularMapPath ? `/${newPlanetData.specularMapPath}` : null;
+    const texturePath = newPlanetData.texturePath
+        ? newPlanetData.texturePath.startsWith('/')
+            ? newPlanetData.texturePath
+            : '/' + newPlanetData.texturePath
+        : null;
+
+    const normalMapPath = newPlanetData.normalMapPath
+        ? newPlanetData.normalMapPath.startsWith('/')
+            ? newPlanetData.normalMapPath
+            : '/' + newPlanetData.normalMapPath
+        : null;
+
+    const bumpMapPath = newPlanetData.bumpMapPath
+        ? newPlanetData.bumpMapPath.startsWith('/')
+            ? newPlanetData.bumpMapPath
+            : '/' + newPlanetData.bumpMapPath
+        : null;
+
+    const aoMapPath = newPlanetData.aoMapPath
+        ? newPlanetData.aoMapPath.startsWith('/')
+            ? newPlanetData.aoMapPath
+            : '/' + newPlanetData.aoMapPath
+        : null;
+
+    const specularMapPath = newPlanetData.specularMapPath
+        ? newPlanetData.specularMapPath.startsWith('/')
+            ? newPlanetData.specularMapPath
+            : '/' + newPlanetData.specularMapPath
+        : null;
 
     const planetMesh = createPlanet(
         newPlanetData.radius || 1,
@@ -152,6 +176,7 @@ export function updatePlanetScene(newPlanetData) {
         aoMapPath,
         specularMapPath
     );
+    console.log("Adres do loadera:", texturePath);
     planetMesh.receiveShadow = true;
     setMeshProperties(planetMesh, newPlanetData.name, newPlanetData.radius);
     threeState.planetGroup.add(planetMesh);
@@ -180,11 +205,15 @@ export function updatePlanetScene(newPlanetData) {
         );
 
     }
-
     // Obsługa chmur (dla np. Earth, Venus)
     if (newPlanetData.cloudTexture) {
-        const cloudsTexturePath = `/${newPlanetData.cloudTexture}`;
-        const cloudsTexture = loader.load(cloudsTexturePath);
+        const cloudsTexturePath = newPlanetData.cloudTexture.startsWith('/')
+            ? newPlanetData.cloudTexture
+            : '/' + newPlanetData.cloudTexture;
+        const cloudsTexture = loader.load(cloudsTexturePath, () => console.log('Chmury załadowane:', cloudsTexturePath),
+            undefined,
+            (err) => console.error('Błąd ładowania chmur:', cloudsTexturePath, err)
+        );
         let cloudsMaterial = new THREE.MeshPhongMaterial({
             map: cloudsTexture,
             transparent: true,
@@ -193,7 +222,12 @@ export function updatePlanetScene(newPlanetData) {
         if (newPlanetData.name === 'Earth') {
             cloudsMaterial = new THREE.MeshStandardMaterial({
                 map: cloudsTexture,
-                alphaMap: loader.load('/assets/textures/earth/earth_cloud_Alpha.png'),
+                alphaMap: loader.load(
+                    '/assets/textures/earth/earth_cloud_Alpha.png',
+                    () => console.log('AlphaMap załadowany'),
+                    undefined,
+                    (err) => console.error('Błąd alphaMap', err)
+                ),
                 transparent: true,
                 depthWrite: false,
                 opacity: newPlanetData.cloudOpacity,
@@ -211,7 +245,9 @@ export function updatePlanetScene(newPlanetData) {
 
     if (newPlanetData.additionalTexture) {
         // Poprawione odwołanie:
-        const additionalTexturePath = `/${newPlanetData.additionalTexture}`;
+        const additionalTexturePath = newPlanetData.additionalTexture.startsWith('/')
+            ? newPlanetData.additionalTexture
+            : '/' + newPlanetData.additionalTexture;
         const additionalMap = loader.load(additionalTexturePath);
         additionalMap.colorSpace = THREE.SRGBColorSpace;
 

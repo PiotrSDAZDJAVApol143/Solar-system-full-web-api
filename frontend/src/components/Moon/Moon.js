@@ -9,14 +9,37 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 
 /**
- * Funkcja losująca ścieżkę do jednego z 5 domyślnych modeli.
+ * Funkcja losująca ścieżkę do jednego z 5 domyślnych modeli oraz teksturami.
  * Możesz zmienić rozszerzenie i nazwy ścieżek według potrzeb.
  */
-function getRandomDefaultModelPath() {
+function getRandomDefaultModelAndTexture() {
     const randomIndex = Math.floor(Math.random() * 5) + 1; // 1..5
-    const path = `/assets/models/3D_models/default${randomIndex}.ply`;
-  //  console.log(`[Moon.js] Wylosowano model domyślny: "${path}"`);
-    return path;
+    return {
+        modelPath: `/assets/models/3D_models/default${randomIndex}.ply`,
+        texturePath: `/assets/textures/moon/default${randomIndex}.jpg`
+    };
+}
+
+// Helper – zawsze zwraca null lub string zaczynający się od '/'
+function fixPath(path) {
+    if (!path) return null;
+    // Usuwa nadmiarowe ukośniki na początku i dokładnie JEDEN
+    return '/' + path.replace(/^\/+/, '');
+}
+
+function normalizeToUnitSphere(object3D) {
+    const box = new THREE.Box3().setFromObject(object3D);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maxDim = Math.max(size.x, size.y, size.z);
+    if (maxDim === 0) return;
+    // Przesuwamy środek do (0,0,0)
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    object3D.position.sub(center);
+    // Normalizujemy
+    const scale = 1 / (maxDim / 2);
+    object3D.scale.setScalar(scale);
 }
 
 export class Moon {
@@ -25,11 +48,11 @@ export class Moon {
         this.radius = params.radius;
         this.meanRadiusKm = params.meanRadiusKm;
 
-        this.texturePath = params.texturePath || null;
-        this.bumpMapPath = params.bumpMapPath || null;
-        this.normalMapPath = params.normalMapPath || null;
-        this.aoMapPath = params.aoMapPath || null;
-        this.specularMapPath = params.specularMapPath || null;
+        this.texturePath     = fixPath(params.texturePath);
+        this.bumpMapPath     = fixPath(params.bumpMapPath);
+        this.normalMapPath   = fixPath(params.normalMapPath);
+        this.aoMapPath       = fixPath(params.aoMapPath);
+        this.specularMapPath = fixPath(params.specularMapPath);
 
         this.orbitDuration = (typeof params.orbitDuration === 'number')
             ? Math.abs(params.orbitDuration)
@@ -66,6 +89,9 @@ export class Moon {
             console.error(`Nieprawidłowy scaleFactor dla księżyca ${this.name}:`, this.scaleFactor);
         }
 
+        // Debug – sprawdzaj, jaką ścieżkę przekazujesz
+         console.log(`[Moon.js] Tworzę księżyc ${this.name} z texturePath:`, this.texturePath);
+
         this.initMoon();
     }
 
@@ -73,7 +99,6 @@ export class Moon {
         this.orbitPivot = new THREE.Object3D();
         this.parentPlanet.add(this.orbitPivot);
         this.orbitPivot.rotation.x = THREE.MathUtils.degToRad(this.orbitTilt);
-
         if (this.texturePath) {
          //   console.log(`[Moon.js] [${this.name}] Ma surfaceTexture -> generuję kulę z createPlanet()`);
             const sphereMesh = this.createPlanetMesh();
@@ -85,21 +110,28 @@ export class Moon {
                     this.setupMoonMesh(modelMesh);
                 }).catch(err => {
                     console.error(`[Moon.js] [${this.name}] Błąd wczytywania modelu z ${this.modelPath}:`, err);
-                //    console.log(`[Moon.js] [${this.name}] -> fallback: createPlanet (kula)`);
                     const sphereMesh = this.createPlanetMesh();
                     this.setupMoonMesh(sphereMesh);
                 });
             } else {
-             //   console.log(`[Moon.js] [${this.name}] Brak tekstury i modelPath. -> wczytuję losowy default.`);
-                const randomDefault = getRandomDefaultModelPath();
-                this.loadModel(randomDefault).then(randomMesh => {
-                    this.setupMoonMesh(randomMesh);
-                }).catch(err => {
-                    console.error(`[Moon.js] [${this.name}] Błąd wczytywania losowego modelu:`, err);
-                 //   console.log(`[Moon.js] [${this.name}] -> fallback: createPlanet (kula)`);
-                    const sphereMesh = this.createPlanetMesh();
-                    this.setupMoonMesh(sphereMesh);
-                });
+                if (this.modelPath) {
+                    this.loadModel(this.modelPath).then(modelMesh => {
+                        this.setupMoonMesh(modelMesh);
+                    }).catch(err => {
+                        console.error(`[Moon.js] [${this.name}] Błąd wczytywania modelu z ${this.modelPath}:`, err);
+                        // Fallback – losowy model + tekstura!
+                        const {modelPath, texturePath} = getRandomDefaultModelAndTexture();
+                        this.loadModelWithTexture(modelPath, texturePath).then(mesh => {
+                            this.setupMoonMesh(mesh);
+                        });
+                    });
+                } else {
+                    // Losowy model + losowa tekstura:
+                    const {modelPath, texturePath} = getRandomDefaultModelAndTexture();
+                    this.loadModelWithTexture(modelPath, texturePath).then(mesh => {
+                        this.setupMoonMesh(mesh);
+                    });
+                }
             }
         }
     }
@@ -114,6 +146,41 @@ export class Moon {
             this.aoMapPath,
             this.specularMapPath
         );
+
+    }
+    loadModelWithTexture(modelPath, texturePath) {
+        return new Promise((resolve, reject) => {
+            const extension = modelPath.split('.').pop().toLowerCase();
+            if (extension === 'ply') {
+                // Ładujemy model .ply i nakładamy teksturę
+                const loader = new PLYLoader();
+                loader.load(modelPath, (geometry) => {
+                    // Ładujemy teksturę
+                    const texLoader = new THREE.TextureLoader();
+                    texLoader.load(texturePath, (texture) => {
+                        const material = new THREE.MeshStandardMaterial({
+                            map: texture,
+                            color: 0xffffff,
+                        });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        normalizeToUnitSphere(mesh);
+                        mesh.scale.set(this.radius, this.radius, this.radius);
+                        resolve(mesh);
+                    }, undefined, (err) => {
+                        // Nie udało się załadować tekstury, fallback na biały mesh
+                        const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        normalizeToUnitSphere(mesh);
+                        mesh.scale.set(this.radius, this.radius, this.radius);
+                        resolve(mesh);
+                    });
+                }, undefined, (error) => {
+                    reject(error);
+                });
+            } else {
+                reject(new Error('Nieobsługiwany format modelu: ' + extension));
+            }
+        });
     }
 
     setupMoonMesh(mesh) {
@@ -173,9 +240,10 @@ export class Moon {
                 const loader = new GLTFLoader();
                 loader.load(path, (gltf) => {
                     const model = gltf.scene.clone(true);
-                    const finalScale = this.radius;
-                  //  console.log(`[Moon.js] [${this.name}] Wczytano model .glb => skala = ${finalScale}`);
-                    model.scale.set(finalScale, finalScale, finalScale);
+                    normalizeToUnitSphere(model);
+                    console.log("Model boundingSphere (przed skalą):", model);
+                    model.scale.multiplyScalar(this.radius);
+                    console.log("Model scale (po normalizacji):", model.scale);
 
                     model.traverse((child) => {
                         if (child.isMesh) {
@@ -195,6 +263,7 @@ export class Moon {
                     const mesh = new THREE.Mesh(geometry, material);
                     const finalScale = this.radius;
                   //  console.log(`[Moon.js] [${this.name}] Wczytano model .ply => skala = ${finalScale}`);
+                    normalizeToUnitSphere(mesh);
                     mesh.scale.set(finalScale, finalScale, finalScale);
                     resolve(mesh);
                 }, undefined, (error) => {

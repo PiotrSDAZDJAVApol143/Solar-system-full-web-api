@@ -11,7 +11,7 @@ import java.util.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "Solar_Bodies")
+@Table(name = "solar_bodies")
 @ToString
 public class SolarBodies {
 

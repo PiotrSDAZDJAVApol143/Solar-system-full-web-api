@@ -5,6 +5,7 @@ import '../../../../components/Planet/Planet.css';
 import PlanetInfoPage from "../../../../components/Planet/PlanetInfoPage";
 
 function Mars(){
-    return <PlanetInfoPage planetName="Mars" apiUrl="http://localhost:8080/api/solarbodies/mars" />;
+   // return <PlanetInfoPage planetName="Mars" apiUrl="http://localhost:8080/api/solarbodies/mars" />;
+    return <PlanetInfoPage planetName="Mars" apiUrl="/api/solarbodies/mars" />;
 }
 export default Mars;

@@ -24,7 +24,7 @@ const planetsConfig = {
         cloudRotationSpeed: 20,
         cloudOpacity: 0.6,
         cloudScale: 1.015,
-        cloudAlphaTexture: "/assets/textures/earth/earth_cloud_Alpha.png",
+        cloudAlphaTexture: "assets/textures/earth/earth_cloud_Alpha.png",
     },
     Mars: {
         sunOrbitDuration: 20610,
@@ -100,7 +100,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.651,
                 thickness: 0.02,
                 opacity: 0.3,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Ring 5",
@@ -108,7 +108,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.667,
                 thickness: 0.02,
                 opacity: 0.4,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Ring 4",
@@ -116,7 +116,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.680,
                 thickness: 0.02,
                 opacity: 0.4,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Alpha",
@@ -124,7 +124,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.770,
                 thickness: 0.02,
                 opacity: 0.5,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Beta",
@@ -132,7 +132,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.810,
                 thickness: 0.02,
                 opacity: 0.5,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Eta",
@@ -140,7 +140,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.860,
                 thickness: 0.02,
                 opacity: 0.3,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Gamma",
@@ -148,7 +148,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.880,
                 thickness: 0.02,
                 opacity: 0.4,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Delta",
@@ -156,7 +156,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.906,
                 thickness: 0.02,
                 opacity: 0.4,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Lambda",
@@ -164,7 +164,7 @@ const planetsConfig = {
                 outerRadiusFactor: 1.973,
                 thickness: 0.02,
                 opacity: 0.3,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             },
             {
                 name: "Epsilon",
@@ -172,7 +172,7 @@ const planetsConfig = {
                 outerRadiusFactor: 2.085,
                 thickness: 0.02,
                 opacity: 0.7,
-                texturePath: "assets/textures/uranus/Uranus_rings.png"
+                texturePath: "assets/textures/uranus/uranus_rings.png"
             }
         ],
     },

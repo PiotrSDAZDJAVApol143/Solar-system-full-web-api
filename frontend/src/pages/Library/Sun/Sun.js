@@ -8,7 +8,8 @@ function Sun(){
     const [planetData, setPlanetData] = useState(null);
     useEffect(() => {
         // Pobierz dane z backendu
-        axios.get('http://localhost:8080/api/solarbodies/sun')
+      //  axios.get('http://localhost:8080/api/solarbodies/sun')
+        axios.get('/api/solarbodies/sun')
             .then(response => {
                 const data = response.data;
                 const textures = data.textures || {};

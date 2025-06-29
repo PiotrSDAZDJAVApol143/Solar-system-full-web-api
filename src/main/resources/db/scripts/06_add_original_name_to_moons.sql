@@ -1,1 +1,1 @@
-ALTER TABLE Moons ADD COLUMN original_name VARCHAR(255);
+ALTER TABLE moons ADD COLUMN original_name VARCHAR(255);

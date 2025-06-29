@@ -43,10 +43,14 @@ public class SolarBodiesService {
                 logger.warning("No data found for: " + englishName);
                 return;
             }
-
-            // Zainicjalizuj pole moons, jeśli jest null
+            // Po pobraniu planet i inicjalizacji księżyców:
             if (solarBodiesDetails.getMoons() == null) {
                 solarBodiesDetails.setMoons(new HashSet<>());
+            } else {
+                // Ustaw poprawnie relację dla każdego księżyca
+                for (Moon moon : solarBodiesDetails.getMoons()) {
+                    moon.setSolarBodies(solarBodiesDetails);
+                }
             }
 
             logger.info("Fetched data from API: " + solarBodiesDetails);
@@ -91,6 +95,11 @@ public class SolarBodiesService {
             try {
                 if (solarBody.getMoons() == null) {
                     solarBody.setMoons(new HashSet<>());
+                } else {
+                    // KLUCZOWE: przypisz solarBody do każdego Moon!
+                    for (Moon moon : solarBody.getMoons()) {
+                        moon.setSolarBodies(solarBody);
+                    }
                 }
                 // Ustaw moonCount
                 solarBody.setMoonCount(solarBody.getMoons().size());
@@ -98,6 +107,9 @@ public class SolarBodiesService {
                 // Zapis
                 SolarBodies existing = solarBodiesRepository.findByEnglishNameIgnoreCase(solarBody.getEnglishName());
                 if (existing != null) {
+                    for (Moon moon : solarBody.getMoons()) {
+                        moon.setSolarBodies(existing);
+                    }
                     existing.setMoons(solarBody.getMoons());
                     existing.setMoonCount(solarBody.getMoonCount());
                     solarBodiesRepository.save(existing);
@@ -114,7 +126,7 @@ public class SolarBodiesService {
      * Zwraca obiekt z bazy po englishName (lub null).
      */
     public SolarBodies getSolarBodyByName(String englishName) {
-        SolarBodies solarBody = solarBodiesRepository.findByEnglishNameIgnoreCase(englishName);
+        SolarBodies solarBody = solarBodiesRepository.findByEnglishNameWithMoons(englishName);
         if (solarBody == null) {
             logger.warning("No solar body found for: " + englishName);
         }
@@ -132,6 +144,9 @@ public class SolarBodiesService {
 
             if (solarBodiesDetails.getMoons() == null) {
                 solarBodiesDetails.setMoons(new HashSet<>());
+            } else {
+                // Najważniejsze! POWIĄŻ księżyce z planetą
+                solarBodiesDetails.setMoons(solarBodiesDetails.getMoons());
             }
             solarBodiesDetails.setMoonCount(solarBodiesDetails.getMoons().size());
             SolarBodies existingSolarBody = solarBodiesRepository.findByEnglishNameIgnoreCase(englishName);
@@ -326,12 +341,12 @@ public class SolarBodiesService {
      * Prosta metoda do masowego pobrania z API i zapisania w bazie (np. w pętli).
      * Jeżeli "planetNames" zawiera [Mercury, Venus, Earth...], to ściągnie i zapisze wszystkie.
      */
-    public void saveSolarBodiesDataForPlanets(List<String> planetNames) {
-        for (String planetName : planetNames) {
-            logger.info("Attempting to fetch/save " + planetName);
-            findOrFetchByEnglishName(planetName);
-        }
-    }
+  //  public void saveSolarBodiesDataForPlanets(List<String> planetNames) {
+  //      for (String planetName : planetNames) {
+  //          logger.info("Attempting to fetch/save " + planetName);
+  //          findOrFetchByEnglishName(planetName);
+  //      }
+  //  }
 
     /**
      * Szuka w bazie, jeśli brak, pobiera z API i zapisuje w bazie.

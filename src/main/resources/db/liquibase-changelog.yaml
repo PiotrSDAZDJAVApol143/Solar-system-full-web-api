@@ -16,11 +16,11 @@ databaseChangeLog:
         onError: MARK_RAN
         not:
           columnExists:
-            tableName: Solar_Bodies
+            tableName: solar_bodies
             columnName: external_id
       changes:
         - addColumn:
-            tableName: Solar_Bodies
+            tableName: solar_bodies
             columns:
               - column:
                   name: external_id
@@ -49,22 +49,22 @@ databaseChangeLog:
         - sqlFile:
             path: scripts/05_update_moon_count.sql
             relativeToChangelogFile: true
-  - changeSet:
-      id: 06_add_original_name_to_moons
-      author: piotr
-      preConditions:
-        onFail: MARK_RAN
-        onError: MARK_RAN
-        not:
-          columnExists:
-            tableName: Moons
-            columnName: original_name
-      changes:
-        - addColumn:
-            tableName: Moons
-            columns:
-              - column:
-                  name: original_name
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: true
+  #- changeSet:
+  #    id: 06_add_original_name_to_moons
+  #    author: piotr
+  #    preConditions:
+  #      onFail: MARK_RAN
+  #      onError: MARK_RAN
+  #      not:
+  #        columnExists:
+  #          tableName: Moons
+  #          columnName: original_name
+  #    changes:
+  #      - addColumn:
+  #          tableName: Moons
+  #          columns:
+  #            - column:
+  #                name: original_name
+  #                type: VARCHAR(255)
+  #                constraints:
+  #                  nullable: true

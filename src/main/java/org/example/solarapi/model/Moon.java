@@ -11,7 +11,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @Entity
-@Table(name = "Moons")
+@Table(name = "moons")
 @ToString
 public class Moon {
     @Id

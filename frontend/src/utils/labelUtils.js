@@ -36,20 +36,31 @@ export function updateLabelVisibility(labelObject, targetObject, camera, raycast
         labelObject.visible = false;
         return;
     }
-    // Pobierz pozycję obiektu w przestrzeni świata
     let targetPosition = new THREE.Vector3();
     targetObject.getWorldPosition(targetPosition);
 
-    // Ustaw raycaster
     raycaster.set(camera.position, targetPosition.clone().sub(camera.position).normalize());
 
-    let filteredOcclusionObjects = occlusionObjects.filter(obj => obj && obj !== targetObject && obj.name !== 'PlanetRing');
-    let intersects = raycaster.intersectObjects(filteredOcclusionObjects, true);
+    // Oddziel pierścienie od innych przeszkód
+    let planetOccluders = occlusionObjects.filter(obj => obj && obj !== targetObject && obj.name !== 'PlanetRing');
+    let ringOccluders   = occlusionObjects.filter(obj => obj && obj.name === 'PlanetRing');
 
-    if (intersects.length > 0) {
+    let planetHits = raycaster.intersectObjects(planetOccluders, true);
+    if (planetHits.length > 0) {
         labelObject.visible = false;
+        labelObject.element.classList.remove('gray');
+        return;
+    }
+
+    // Czy pierścień przysłania?
+    let ringHits = raycaster.intersectObjects(ringOccluders, true);
+    if (ringHits.length > 0) {
+        // Przysłonięty przez pierścień: pokaż ale w innym stylu
+        labelObject.visible = true;
+        labelObject.element.classList.add('gray');
     } else {
         labelObject.visible = true;
+        labelObject.element.classList.remove('gray');
     }
 }
 

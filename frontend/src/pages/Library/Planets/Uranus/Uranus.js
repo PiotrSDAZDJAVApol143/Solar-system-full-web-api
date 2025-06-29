@@ -4,7 +4,8 @@ import '../../../../components/Planet/Planet.css';
 import PlanetInfoPage from "../../../../components/Planet/PlanetInfoPage";
 
 function Uranus(){
-    return <PlanetInfoPage planetName="Uranus" apiUrl="http://localhost:8080/api/solarbodies/uranus" />;
+    return <PlanetInfoPage planetName="Uranus" apiUrl="/api/solarbodies/uranus" />;
+  //  return <PlanetInfoPage planetName="Uranus" apiUrl="http://localhost:8080/api/solarbodies/uranus" />;
 }
 
 export default Uranus;

@@ -1,7 +1,6 @@
 package org.example.solarapi.service;
 
 import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
 import org.example.solarapi.dto.SolarBodiesResponse;
 import org.example.solarapi.model.SolarBodies;
 import org.springframework.stereotype.Service;

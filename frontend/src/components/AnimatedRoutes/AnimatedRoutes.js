@@ -1,5 +1,5 @@
 // src/components/AnimatedRoutes/AnimatedRoutes.js
-import React, { useRef } from 'react';
+import React, {useEffect, useRef} from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from '../../pages/Home/Home';
 import About from '../../pages/About/About';
@@ -19,7 +19,7 @@ import Saturn from "../../pages/Library/Planets/Saturn/Saturn";
 import Uranus from "../../pages/Library/Planets/Uranus/Uranus";
 import Neptune from "../../pages/Library/Planets/Neptune/Neptune";
 
-function AnimatedRoutes() {
+function AnimatedRoutes({ stardustRef }) {
     const location = useLocation();
     const nodeRefs = useRef({});
 
@@ -28,6 +28,15 @@ function AnimatedRoutes() {
         nodeRefs.current[currentKey] = React.createRef();
     }
 
+    // Fade Stardust
+    useEffect(() => {
+        if (!stardustRef || !stardustRef.current) return;
+        if (location.pathname === '/solar-system') {
+            stardustRef.current.fadeOut(1200);
+        } else {
+            stardustRef.current.fadeIn(800);
+        }
+    }, [location, stardustRef]);
 
     return (
         <TransitionGroup className="transition-group">

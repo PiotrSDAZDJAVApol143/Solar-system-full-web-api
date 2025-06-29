@@ -12,7 +12,8 @@ function SolarSystem() {
 
     useEffect(() => {
         // 1. Pobieramy dane z backendu
-        axios.get('http://localhost:8080/api/solarbodies/solarsystem')
+        axios.get('/api/solarbodies/solarsystem')
+     //   axios.get('http://localhost:8080/api/solarbodies/solarsystem')
             .then(response => {
                 setSolarSystemData(response.data);
             })

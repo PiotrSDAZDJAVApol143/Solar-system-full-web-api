@@ -1,8 +1,8 @@
-DELETE FROM Solar_Bodies
+DELETE FROM solar_bodies
 WHERE id_number NOT IN (
     SELECT * FROM (
                       SELECT MIN(id_number)
-                      FROM Solar_Bodies
+                      FROM solar_bodies
                       GROUP BY english_name
                   ) AS temp_table
 );

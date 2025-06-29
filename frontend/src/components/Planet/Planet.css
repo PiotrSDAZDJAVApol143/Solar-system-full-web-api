@@ -110,6 +110,11 @@
     cursor: pointer;
     pointer-events: auto;
 }
+.label.gray {
+    color: rgba(118, 112, 112, 0.45);
+    text-shadow: none !important;
+    font-style: italic;
+}
 .lens-flare {
     position: absolute;
     top: 50%;
